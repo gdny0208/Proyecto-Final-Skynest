@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyNest · Rastrear paquete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/estilo.css">
+</head>
+<body>
+<header class="cabecera" id="cabecera"></header>
+<main>
+  <section class="heroe" aria-label="Rastrear">
+    <div class="contenedor heroe-titulo" style="flex-direction: column; align-items: flex-start; gap: 18px">
+      <span class="sobre">Vista del cliente · función fn_rastrear_paquete</span>
+      <h1>¿Dónde está tu paquete?</h1>
+      <form id="form" style="display: flex; flex-wrap: wrap; gap: 12px; width: 100%; max-width: 640px">
+        <label for="codigo" class="oculto">Código de tracking</label>
+        <input id="codigo" placeholder="Código de tracking, p. ej. SKY000000010" autocomplete="off"
+               style="flex: 1 1 320px; border-radius: 999px; min-height: 48px; font-size: 16px; padding: 0 20px" required>
+        <button class="boton" type="submit">Rastrear</button>
+      </form>
+      <div class="chips" id="ejemplos" aria-label="Códigos de ejemplo"></div>
+    </div>
+  </section>
+
+  <div class="contenedor seccion">
+    <div id="estado"></div>
+    <section class="tarjeta-borde oculto" style="flex: none" id="resultado" aria-label="Estado del paquete">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 16px">
+        <div>
+          <div class="chico texto-gris">Paquete</div>
+          <div class="num liviano" style="font-size: 44px" id="r-codigo"></div>
+        </div>
+        <div id="r-estado" style="font-size: 18px"></div>
+      </div>
+      <div class="linea-tiempo" id="r-linea" style="margin: 28px 0"></div>
+      <div class="ficha" id="r-ficha"></div>
+    </section>
+  </div>
+</main>
+<footer class="pie"><div class="contenedor">SkyNest · Proyecto Final CS2041 Base de Datos I · UTEC 2026-2 · Grupo 3</div></footer>
+<script src="/static/js/comun.js"></script>
+<script>
+const { api, fmt, fecha, esc, estado } = SkyNest;
+const $ = (id) => document.getElementById(id);
+
+async function rastrear(codigo) {
+  $('estado').innerHTML = '<p class="cargando">Buscando…</p>';
+  $('resultado').classList.add('oculto');
+  try {
+    const p = await api(`/api/rastrear/${encodeURIComponent(codigo)}`);
+    $('estado').innerHTML = '';
+    $('resultado').classList.remove('oculto');
+    $('r-codigo').textContent = p.codigo_tracking;
+    $('r-estado').innerHTML = estado(p.estado_paquete);
+    const orden = ['registrado', 'asignado', 'en_ruta', 'entregado'];
+    const i = p.estado_paquete === 'entregado' ? 3 : orden.indexOf(p.estado_paquete);
+    const hitos = [
+      ['Registrado', p.fecha_registro], ['Asignado a un vuelo', p.id_vuelo ? '' : null],
+      ['En vuelo', p.despegue], [p.estado_paquete === 'fallido' || p.estado_paquete === 'devuelto' ? 'No entregado' : 'Entregado',
+        p.fecha_entrega || (['fallido', 'devuelto'].includes(p.estado_paquete) ? p.aterrizaje : null)],
+    ];
+    const hechos = ['fallido', 'devuelto'].includes(p.estado_paquete) ? 4 : i + 1;
+    $('r-linea').innerHTML = hitos.map(([n, f], k) => `<div class="hito ${k < hechos ? 'hecho' : ''}">
+        <div class="punto"><i></i>${k < 3 ? '<b></b>' : ''}</div>
+        <span class="nombre">${n}</span><span class="fecha">${f ? fecha(f) : (k < hechos ? '' : 'pendiente')}</span></div>`).join('');
+    const filas = [
+      ['Distrito de destino', p.distrito_destino], ['Prioridad', p.prioridad], ['Peso', `${fmt(p.peso_kg, 2)} kg`],
+      ['Destinatario', p.destinatario_nombre], ['Vuelo', p.id_vuelo ? `${p.id_vuelo} · ${estado(p.estado_vuelo)}` : 'sin vuelo asignado'],
+      ['Ruta', p.ruta ? `${p.ruta} (${p.duracion_est_min} min estimados)` : '–'],
+      ['Sale de', p.nest_origen || '–'], ['Drone', p.modelo || '–'],
+    ];
+    $('r-ficha').innerHTML = filas.map(([k, v]) =>
+      `<div><span>${k}</span><span>${k === 'Vuelo' ? v : esc(v ?? '–')}</span></div>`).join('');
+  } catch (e) {
+    $('estado').innerHTML = `<div class="mensaje mensaje-error">${esc(e.message)}</div>`;
+  }
+}
+
+$('form').addEventListener('submit', (e) => { e.preventDefault(); rastrear($('codigo').value.trim()); });
+SkyNest.iniciar('rastrear', async () => {
+  $('resultado').classList.add('oculto');
+  $('estado').innerHTML = '';
+  try {
+    const ej = await api('/api/ejemplos');
+    $('ejemplos').innerHTML = '<span class="chico" style="color: #A1A1A6; align-self: center">Prueba con:</span>' +
+      ej.map((x) => `<button type="button" class="chip chip-oscuro" style="border: none; cursor: pointer; min-height: 32px" data-c="${esc(x.codigo_tracking)}">${esc(x.codigo_tracking)} · ${esc(x.estado)}</button>`).join('');
+    document.querySelectorAll('#ejemplos button').forEach((b) => b.addEventListener('click', () => {
+      $('codigo').value = b.dataset.c; rastrear(b.dataset.c);
+    }));
+  } catch (e) { /* sin ejemplos */ }
+});
+</script>
+</body>
+</html>

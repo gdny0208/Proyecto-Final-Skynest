@@ -1,0 +1,861 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs,longtable,tabularx,array,multirow}
+\usepackage{enumitem}
+\usepackage[table]{xcolor}
+\usepackage{pdflscape}
+\usepackage{afterpage}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,positioning}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\input{estilo_hito2}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small CS2041 -- UTEC\\ \small Base de Datos I}
+\fancyhead[C]{\small 2026-2}
+\fancyhead[R]{\small Proyecto Final -- Hito 2\\ \small Grupo 3 -- Tópico 4}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\setlength{\headheight}{26pt}
+
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\parskip}{4pt}
+\renewcommand{\arraystretch}{1.15}
+
+% Notación del modelo relacional
+\newcommand{\pk}[1]{\underline{#1}}
+\newcommand{\fk}[1]{\textit{#1}\textsuperscript{\tiny FK}}
+\newcommand{\pkfk}[1]{\underline{\textit{#1}}\textsuperscript{\tiny FK}}
+\newcommand{\tb}[1]{\textbf{\texttt{#1}}}
+\newcommand{\at}[1]{\texttt{#1}}
+
+\begin{document}
+\sloppy
+
+% ---------------------------------------------------------------- Portada
+\begin{titlepage}
+\centering
+{\large Universidad de Ingeniería y Tecnología -- UTEC\par}
+\vspace{0.4cm}
+{\large CS2041 Base de Datos I -- Ciclo 2026-2\par}
+\vspace{2.5cm}
+{\LARGE\bfseries Proyecto Final -- Hito 2\par}
+\vspace{0.6cm}
+{\Huge\bfseries SkyNest\par}
+\vspace{0.3cm}
+{\Large Sistema de base de datos para la gestión de drones\\ de envíos urbanos en Lima Metropolitana\par}
+\vspace{0.6cm}
+{\large Tópico 4: Gestión de Drones para Envíos Urbanos\par}
+\vspace{2.5cm}
+{\large\bfseries Grupo 3\par}
+\vspace{0.3cm}
+\begin{tabular}{l}
+Saquiray Delgado, Samuel Aaron -- 202310697 \\
+Caceres Sanchez, Matias Andres -- 202510370 \\
+Del Negro Yabar, Giuseppe Antonio -- 202110545 \\
+\end{tabular}
+\vfill
+{\large Profesor: Wilder Nina\par}
+\vspace{0.3cm}
+{\large Lima, \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ================================================================ 1
+\section{Requisitos}
+
+\subsection{Introducción}
+El reparto de última milla es el tramo más caro y lento de la cadena logística urbana. En Lima Metropolitana, la congestión vehicular hace que un envío de pocos kilómetros pueda tardar más de una hora por tierra. Los drones de reparto, que vuelan en línea recta sobre el tráfico, permiten entregar paquetes livianos (medicamentos, repuestos, documentos, muestras de laboratorio o compras de comercio electrónico) en minutos.
+
+Operar una flota de drones exige, sin embargo, un control de información mucho más estricto que el de una flota de motos: cada vuelo debe estar asociado a un drone registrado, a una ruta aprobada, a un operador con licencia vigente y a una batería en buen estado, y cada batería emite telemetría continua que determina si el vuelo puede continuar con seguridad. Este documento especifica los requisitos de la base de datos que soportará dicha operación.
+
+\subsection{Descripción general del problema/organización/empresa}
+\textbf{SkyNest} es una empresa (ficticia, planteada para este proyecto) de reparto urbano con drones que opera en Lima Metropolitana y el Callao. Su infraestructura se organiza en:
+
+\begin{itemize}
+\item \textbf{Estaciones nest}: bases físicas ubicadas en azoteas o terrenos de distintos distritos, donde los drones despegan, aterrizan, se estacionan y recargan o intercambian baterías. Cada nest tiene una capacidad máxima de drones y un número de puertos de carga.
+\item \textbf{Flota de drones}: aeronaves pilotadas a distancia (RPAS) de distintos modelos y fabricantes, cada una registrada ante la autoridad aeronáutica y asignada a un nest base.
+\item \textbf{Baterías}: unidades intercambiables que se instalan y retiran de los drones; su estado de salud se degrada con los ciclos de carga.
+\item \textbf{Operadores}: pilotos certificados que supervisan los vuelos desde un nest (un operador puede supervisar varios vuelos autónomos en paralelo).
+\item \textbf{Clientes}: personas naturales y empresas (farmacias, laboratorios, tiendas) que registran paquetes para envío.
+\item \textbf{Rutas de vuelo}: corredores aéreos aprobados que salen de un nest hacia un distrito de destino, definidos por una secuencia ordenada de puntos de paso (waypoints).
+\end{itemize}
+
+El problema a resolver es que hoy la información de estas piezas está dispersa y no existe un registro único y consistente que permita saber, para cada entrega, qué drone la hizo, con qué batería, por qué ruta, bajo la supervisión de quién y cómo se comportó la batería durante el vuelo.
+
+\subsection{Necesidad/usos de la base de datos}
+La base de datos debe servir como fuente única de verdad para la operación. Sus usos principales son:
+
+\begin{enumerate}
+\item \textbf{Despacho}: asignar paquetes pendientes a vuelos, verificando que el peso total no supere la carga útil del modelo de drone y que el drone, la batería y el operador estén disponibles y habilitados.
+\item \textbf{Seguimiento}: consultar el estado de un paquete a partir de su código de tracking y conocer el vuelo que lo transporta.
+\item \textbf{Seguridad operacional}: almacenar la telemetría de baterías (voltaje, corriente, temperatura y porcentaje de carga) para detectar sobrecalentamientos, descargas anómalas o baterías degradadas antes de que causen un incidente.
+\item \textbf{Mantenimiento}: llevar el historial de uso de cada batería (en qué vuelos y drones se usó), los ciclos de carga y el estado de salud de cada batería, así como las horas de vuelo acumuladas de cada drone.
+\item \textbf{Cumplimiento normativo}: conservar la trazabilidad de cada vuelo (drone registrado, operador con licencia vigente y autorizado para el modelo de drone y el distrito, ruta aprobada) exigida por la regulación peruana de RPAS (Ley N.° 30740 y la NTC 001-2015 de la DGAC).
+\item \textbf{Análisis del negocio}: medir la tasa de entregas exitosas por nest y por distrito, los tiempos de entrega, la utilización de la flota y el consumo energético por modelo y ruta.
+\end{enumerate}
+
+\subsection{¿Cómo resuelve el problema hoy?}
+
+\subsubsection{¿Cómo se almacenan/procesan los datos hoy?}
+En la situación actual (fase piloto), la información se maneja de forma fragmentada:
+
+\begin{itemize}
+\item Los paquetes se registran en un formulario web cuyas respuestas llegan a una hoja de cálculo compartida.
+\item La asignación de paquetes a drones la decide manualmente el operador de turno y se anota en otra hoja por nest.
+\item La telemetría de cada vuelo queda en los archivos de log que genera la estación de control de cada drone (archivos CSV o binarios del fabricante), guardados en carpetas por fecha, sin vínculo con el paquete ni con el operador.
+\item El inventario de drones y baterías, junto con los registros ante la DGAC y las licencias de los operadores, se lleva en documentos separados.
+\end{itemize}
+
+Esto provoca duplicidad de datos, errores de digitación (códigos de tracking repetidos, pesos mal registrados), imposibilidad de responder preguntas que cruzan fuentes (por ejemplo, ``¿qué baterías se sobrecalentaron en vuelos hacia San Isidro el último mes?'') y riesgo de volar con una batería degradada o con un operador cuya licencia ya venció.
+
+\subsubsection{Flujo de datos}
+El flujo de información de un envío, que el sistema debe soportar de extremo a extremo, es el siguiente:
+
+\begin{enumerate}
+\item El cliente (persona o empresa) registra un paquete indicando peso, dimensiones, destinatario y dirección de destino. Se genera un código de tracking y el paquete queda en estado \at{registrado}.
+\item El sistema determina el distrito de destino y el nest de origen más conveniente; el despachador programa un \emph{vuelo} que usa una ruta aprobada desde ese nest hacia ese distrito, con un drone disponible del nest y un operador asignado.
+\item Al programar el vuelo se le asigna la batería cargada que usará el drone; el sistema verifica que la batería esté operativa y que el operador esté autorizado para ese modelo de drone en el distrito de destino.
+\item Los paquetes se asignan al vuelo (estado \at{asignado}) y, al despegar, pasan a \at{en\_ruta}.
+\item Durante el vuelo, cada batería envía lecturas de telemetría periódicas (por ejemplo, cada 5 segundos), que se insertan en la base de datos.
+\item Al completar la entrega, el paquete pasa a \at{entregado} con su fecha y hora de entrega (o a \at{fallido}/\at{devuelto} si no se pudo entregar). El vuelo se cierra con su hora de aterrizaje y distancia real, y se actualizan las horas de vuelo del drone.
+\item Al retirar la batería se registra la fecha de retiro, y se actualizan sus ciclos de carga y su estado de salud.
+\item Periódicamente, los analistas consultan indicadores agregados (entregas por distrito, tiempos, consumo de batería, utilización de la flota).
+\end{enumerate}
+
+\subsection{Descripción detallada del sistema}
+
+\subsubsection{Objetos de información actuales}
+\begin{itemize}
+\item \textbf{Distrito}: distritos de Lima Metropolitana y el Callao identificados por su código UBIGEO del INEI; indica si el espacio aéreo está restringido (por ejemplo, cerca del aeropuerto) y la altitud máxima permitida.
+\item \textbf{Estación nest}: código, nombre, dirección, coordenadas, capacidad de drones, puertos de carga y estado operativo.
+\item \textbf{Modelo de drone}: fabricante, nombre comercial, carga útil máxima, autonomía, velocidad de crucero, alcance y número de baterías que usa simultáneamente.
+\item \textbf{Drone}: número de serie, código de registro ante la DGAC, fecha de adquisición, estado y horas de vuelo acumuladas.
+\item \textbf{Batería}: número de serie, química, capacidad, voltaje nominal, ciclos de carga, estado de salud (SoH) y estado.
+\item \textbf{Autorización de operación}: permiso que habilita a un operador a volar un modelo de drone determinado sobre un distrito determinado, con fechas de emisión y vencimiento.
+\item \textbf{Operador}: DNI, nombres, contacto, número de licencia de piloto RPAS y su fecha de vencimiento.
+\item \textbf{Cliente}: datos de contacto; si es persona natural, DNI y nombres; si es empresa, RUC y razón social.
+\item \textbf{Paquete}: código de tracking, peso, dimensiones, prioridad, fragilidad, destinatario, dirección y coordenadas de destino, estado, fechas y costo del envío.
+\item \textbf{Ruta de vuelo}: código, nest de origen, distrito de destino, distancia, altitud de crucero, duración estimada y si está activa.
+\item \textbf{Punto de ruta}: waypoints ordenados de la ruta (latitud, longitud, altitud y tipo).
+\item \textbf{Vuelo}: ejecución concreta de una ruta por un drone bajo la supervisión de un operador, con horarios programado y reales, estado y distancia recorrida.
+\item \textbf{Telemetría de batería}: lecturas periódicas de voltaje, corriente, temperatura y porcentaje de carga de una batería durante un vuelo.
+\end{itemize}
+
+\subsubsection{Características y funcionalidades esperadas}
+\begin{itemize}
+\item Registro y actualización de clientes, paquetes, drones, baterías, nests, rutas y operadores.
+\item Programación de vuelos con validaciones automáticas: drone disponible, operador con licencia vigente, ruta activa, peso total dentro de la carga útil y batería con salud suficiente.
+\item Ingesta masiva y continua de telemetría con inserciones rápidas.
+\item Seguimiento de paquetes por código de tracking en tiempo casi real.
+\item Historial completo de uso de baterías por vuelo y por drone, y registro de autorizaciones de operadores por modelo y distrito.
+\item Actualización automática (triggers, a implementar en el Hito 2) de estados: paquete al despegar y aterrizar el vuelo, horas de vuelo del drone, ciclos de la batería, y bloqueo de baterías degradadas.
+\item Reportes y vistas de indicadores: entregas por distrito y nest, tiempos de entrega frente a lo estimado, consumo de batería por modelo y ruta, utilización de la flota y alertas de temperatura.
+\end{itemize}
+
+\subsubsection{Tipos de usuarios existentes/necesarios}
+\begin{center}
+\begin{tabularx}{\textwidth}{>{\bfseries}l X}
+\toprule
+Usuario & Permisos y uso principal \\
+\midrule
+Administrador & Control total: gestiona nests, modelos, drones, baterías, rutas, operadores y usuarios de la base de datos. \\
+Despachador & Programa vuelos, asigna paquetes y baterías a vuelos. \\
+Operador (piloto) & Consulta los vuelos que supervisa, actualiza su estado (despegue, aterrizaje, aborto) y ve la telemetría en vivo. \\
+Cliente & Registra paquetes y consulta únicamente el estado de sus propios envíos. \\
+Técnico de mantenimiento & Consulta la telemetría y el historial de baterías y drones, y actualiza su salud y estado. \\
+Analista & Acceso de solo lectura a vistas agregadas para reportes de gestión. \\
+Sistema de telemetría & Usuario técnico que solo puede insertar lecturas en la tabla de telemetría. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsubsection{Tipos de consulta, actualizaciones}
+\paragraph{Actualizaciones y frecuencia.}
+\begin{itemize}
+\item \textbf{Carga estática (una vez, con cambios esporádicos)}: distritos (UBIGEO), modelos de drone, nests, rutas y sus puntos.
+\item \textbf{Cambios ocasionales (semanales/mensuales)}: alta y baja de drones, baterías y operadores; renovación de licencias y autorizaciones; activación o desactivación de rutas.
+\item \textbf{Cambios diarios (transaccionales)}: registro de clientes y paquetes, programación de vuelos, asignación de baterías, cambios de estado de paquetes y vuelos.
+\item \textbf{Alta frecuencia (continua)}: inserción de lecturas de telemetría durante cada vuelo. Es la tabla de mayor crecimiento y es de solo inserción (no se modifica ni se borra).
+\end{itemize}
+
+\paragraph{Consultas esperadas.} Se prevén consultas como las siguientes; de ellas se seleccionarán las 5 consultas intermedias del Hito 2:
+\begin{enumerate}
+\item Estado y vuelo actual de un paquete a partir de su código de tracking (consulta puntual y muy frecuente).
+\item Tasa de entregas exitosas y tiempo promedio de entrega por nest de origen y distrito de destino en un rango de fechas.
+\item Consumo promedio de batería (puntos porcentuales de carga por kilómetro) por modelo de drone y ruta.
+\item Baterías con lecturas de temperatura por encima de un umbral o caídas de voltaje anómalas en los últimos $N$ vuelos, junto con los drones que las usaron.
+\item Utilización de la flota: horas voladas y número de vuelos por drone y por nest en el mes, comparadas con el promedio de su modelo.
+\item Paquetes \emph{express} entregados con retraso respecto de la duración estimada de la ruta, agrupados por distrito.
+\item Clientes con mayor volumen de envíos y facturación por mes.
+\item Operadores con licencia por vencer en los próximos 30 días y los vuelos que tienen programados.
+\end{enumerate}
+
+\paragraph{Tiempos de respuesta esperados.}
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Operación & Tiempo objetivo \\
+\midrule
+Inserción de una lectura de telemetría & $< 10$ ms \\
+Búsqueda de paquete por código de tracking & $< 50$ ms \\
+Registro de paquete / programación de vuelo (con validaciones) & $< 200$ ms \\
+Consultas analíticas intermedias sobre 1 millón de registros & $< 2$ s \\
+Reportes mensuales agregados & $< 10$ s \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsubsection{Tamaño estimado de la base de datos}
+La estimación considera un año de operación con 30 nests y unos 2\,500 envíos diarios. Una lectura de telemetría cada 5 segundos, en vuelos de unos 15 minutos, genera alrededor de 180 lecturas por vuelo.
+
+Para estimar el espacio se sumó la longitud de los atributos de cada tabla, usando el tamaño de los tipos de PostgreSQL: 4 bytes para \texttt{INTEGER}/\texttt{SERIAL} y \texttt{DATE}, 8 para \texttt{TIMESTAMP} y \texttt{NUMERIC}, 2 para \texttt{SMALLINT}, 1 para \texttt{BOOLEAN}, $n$ para \texttt{CHAR($n$)} y $n+1$ para \texttt{VARCHAR($n$)} en el peor caso. La Tabla~\ref{tab:bytes1} muestra la longitud de un registro por tabla y la Tabla~\ref{tab:bytes2} el espacio total estimado.
+
+\begin{table}[H]
+\centering\small
+\caption{Longitud estimada de un registro por tabla.}
+\label{tab:bytes1}
+\begin{tabular}{l l r}
+\toprule
+Tabla & Longitud de los atributos (bytes) & Registro (bytes) \\
+\midrule
+\tb{distrito} & 6+61+31+1+8 & 107 \\
+\tb{estacion\_nest} & 4+13+81+151+8+8+2+2+16+6 & 291 \\
+\tb{modelo\_drone} & 4+51+51+8+2+8+8 & 132 \\
+\tb{drone} & 4+31+21+4+16+8+4+4 & 92 \\
+\tb{bateria} & 4+31+11+4+8+4+8+13 & 83 \\
+\tb{operador} & 4+8+61+61+101+16+21+4+4 & 280 \\
+\tb{autorizacion} & 4+4+6+4+4 & 22 \\
+\tb{cliente} & 4+101+16+8 & 129 \\
+\tb{cliente\_persona} & 4+8+61+61 & 134 \\
+\tb{cliente\_empresa} & 4+11+121+81 & 217 \\
+\tb{ruta\_vuelo} & 4+16+4+6+8+8+2+1 & 49 \\
+\tb{punto\_ruta} & 4+2+8+8+8+13 & 43 \\
+\tb{permiso\_vuelo} & 4+21+6+4+4+13 & 52 \\
+\tb{vuelo} & 4+4+4+4+4+4+8+8+8+13+11+8 & 80 \\
+\tb{paquete} & 4+12+4+4+6+8+8+8+8+11+1+101+16+151+8+8+13+8+8+8 & 395 \\
+\tb{telemetria\_bateria} & 4+8+8+8+8+8 & 44 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering\small
+\caption{Espacio estimado para un año de operación.}
+\label{tab:bytes2}
+\begin{tabular}{l r r r l}
+\toprule
+Tabla & Registro (B) & Registros & Total (bytes) & Crecimiento \\
+\midrule
+\tb{distrito} & 107 & 50 & 5\,350 & Estático \\
+\tb{estacion\_nest} & 291 & 30 & 8\,730 & Casi estático \\
+\tb{modelo\_drone} & 132 & 8 & 1\,056 & Casi estático \\
+\tb{drone} & 92 & 300 & 27\,600 & Lento \\
+\tb{bateria} & 83 & 900 & 74\,700 & Lento \\
+\tb{operador} & 280 & 120 & 33\,600 & Lento \\
+\tb{autorizacion} & 22 & 1\,500 & 33\,000 & Lento \\
+\tb{cliente} & 129 & 60\,000 & 7\,740\,000 & Moderado \\
+\tb{cliente\_persona} & 134 & 45\,000 & 6\,030\,000 & Moderado \\
+\tb{cliente\_empresa} & 217 & 15\,000 & 3\,255\,000 & Moderado \\
+\tb{ruta\_vuelo} & 49 & 600 & 29\,400 & Lento \\
+\tb{punto\_ruta} & 43 & 6\,000 & 258\,000 & Lento \\
+\tb{permiso\_vuelo} & 52 & 2\,000 & 104\,000 & Lento \\
+\tb{vuelo} & 80 & 600\,000 & 48\,000\,000 & Alto (diario) \\
+\tb{paquete} & 395 & 900\,000 & 355\,500\,000 & Alto (diario) \\
+\tb{telemetria\_bateria} & 44 & 110\,000\,000 & 4\,840\,000\,000 & Muy alto (continuo) \\
+\midrule
+\textbf{Total} & & & \textbf{5\,261\,100\,436} & $\approx 5{,}3$ GB/año \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El total de unos 5,3 GB por año corresponde solo a los datos; PostgreSQL añade una cabecera de 23 bytes por fila, relleno de alineación y el espacio de los índices, por lo que el tamaño real en disco será mayor. La telemetría concentra el 92\,\% del espacio, lo que confirma que es la tabla crítica para el diseño físico. El crecimiento mensual es aproximadamente lineal en las tablas transaccionales (\tb{vuelo}, \tb{paquete} y \tb{telemetria\_bateria}), es decir, unos 437 MB al mes, mientras que las tablas maestras (distritos, nests, modelos, rutas) se mantienen casi constantes.
+
+Para la experimentación del Hito 2 se generarán cuatro volúmenes (1\,000, 10\,000, 100\,000 y 1\,000\,000 de registros) sobre las tablas transaccionales (\tb{paquete}, \tb{vuelo} y \tb{telemetria\_bateria}), manteniendo proporciones realistas entre ellas. La escala se mide en número de vuelos (sección~\ref{sec:carga}).
+
+\subsection{Objetivos del proyecto}
+\paragraph{Objetivo general.} Diseñar e implementar en PostgreSQL una base de datos relacional normalizada que soporte la operación completa de SkyNest, desde el registro del paquete hasta su entrega, con trazabilidad de drones, baterías, rutas, operadores y telemetría.
+
+\paragraph{Objetivos específicos.}
+\begin{enumerate}
+\item Elaborar el modelo entidad-relación y el modelo relacional normalizado (al menos 3FN) con todas sus restricciones de integridad.
+\item Implementar el esquema físico en PostgreSQL con claves, restricciones \texttt{CHECK}, vistas, procedimientos almacenados y triggers que automaticen las reglas de negocio.
+\item Poblar la base con datos reales (UBIGEO, especificaciones de fabricantes, ubicaciones reales) y sintéticos realistas, en cuatro escalas de volumen.
+\item Seleccionar 5 consultas intermedias críticas y optimizarlas con índices, midiendo y comparando tiempos con y sin índices en cada escala.
+\item (Opcional) Desarrollar un MVP web conectado a la base de datos que ejecute las consultas planteadas.
+\end{enumerate}
+
+\subsection{Referencias del proyecto}
+\paragraph{Fuentes de datos.}
+\begin{itemize}
+\item \textbf{INEI -- Códigos UBIGEO}: listado oficial de distritos de Lima Metropolitana y el Callao (datos reales).
+\item \textbf{OpenStreetMap}: coordenadas reales de direcciones y ubicaciones plausibles para nests y destinos dentro de Lima.
+\item \textbf{Fichas técnicas públicas de fabricantes de drones de reparto} (por ejemplo, DJI FlyCart, Wingcopter, Matternet): carga útil, autonomía, velocidad y baterías de los modelos (datos reales).
+\item \textbf{Datos sintéticos}: clientes, paquetes y vuelos generados en Python con la librería Faker (\textit{locales} \texttt{es\_MX} y \texttt{es\_CO}, porque Faker no incluye \texttt{es\_PE}); telemetría simulada con un modelo simple de descarga (la carga decae según la distancia y el peso transportado, con ruido en voltaje y temperatura).
+\end{itemize}
+
+\paragraph{Bibliografía y normativa.}
+\begin{itemize}
+\item R. Ramakrishnan y J. Gehrke. \textit{Sistemas de gestión de bases de datos}, 3.ª ed. McGraw-Hill/Interamericana de España, 2007 (texto guía del curso; caps. 2 y 3 para el diseño ER y su traducción al modelo relacional).
+\item The PostgreSQL Global Development Group. \textit{PostgreSQL Documentation}. \url{https://www.postgresql.org/docs/}
+\item Congreso de la República del Perú. Ley N.° 30740, Ley que regula el uso y las operaciones de los sistemas de aeronaves pilotadas a distancia (RPAS), 2018.
+\item Dirección General de Aeronáutica Civil (MTC). NTC 001-2015, Requisitos para las operaciones de sistemas de aeronaves pilotadas a distancia, 2015.
+\item INEI. Códigos de Ubicación Geográfica (UBIGEO).
+\end{itemize}
+
+\subsection{Eventualidades}
+
+\subsubsection{Problemas que pudieran encontrarse en el proyecto}
+\begin{itemize}
+\item \textbf{Falta de datos reales de operación}: no existen datasets públicos de envíos con drones en Lima, por lo que la mayoría de datos transaccionales serán sintéticos; se cuidará que las distribuciones sean realistas (horas punta, pesos, distancias).
+\item \textbf{Volumen de telemetría}: es la tabla que más crece y puede degradar el rendimiento de inserción si se crean demasiados índices; habrá que equilibrar consultas frente a inserciones.
+\item \textbf{Consistencia temporal}: validar que una batería no se asigne a dos vuelos que se solapan en el tiempo, o que las lecturas de telemetría caigan dentro del intervalo del vuelo, requiere triggers o restricciones de exclusión, no solo llaves foráneas.
+\item \textbf{Coherencia de los datos generados}: al generar 1 millón de registros hay que respetar todas las claves externas y reglas (por ejemplo, que el peso asignado a un vuelo no supere la carga útil), lo que complica el script de generación.
+\item \textbf{Datos faltantes}: lecturas de telemetría perdidas por fallas de señal, o paquetes sin coordenadas exactas; se simularán y tratarán en el Hito 2.
+\end{itemize}
+
+\subsubsection{Límites y alcances del proyecto}
+\paragraph{Alcance.} El sistema cubre la gestión de infraestructura (nests, drones, baterías), personal operativo (operadores), clientes, paquetes, rutas, vuelos y telemetría de baterías en Lima Metropolitana y el Callao.
+
+\paragraph{Límites.}
+\begin{itemize}
+\item No se modela la facturación electrónica ni los medios de pago; solo se registra el costo del envío.
+\item No se implementa el algoritmo de planificación de rutas ni el control de vuelo del drone: las rutas se consideran ya aprobadas y se cargan como datos.
+\item No se almacena la telemetría de navegación completa (GPS, actitud, velocidad), solo la de baterías.
+\item La geolocalización se representa con latitud y longitud decimales, sin usar extensiones espaciales como PostGIS.
+\item Se asume que cada drone usa una sola batería (o pack) por vuelo.
+\item Los órdenes de mantenimiento de drones quedan fuera del alcance; solo se registran su estado y sus horas de vuelo.
+\end{itemize}
+
+% ================================================================ 2
+\section{Modelo Entidad-Relación}
+
+El modelo se construyó siguiendo la notación y los criterios de diseño de Ramakrishnan y Gehrke (cap.~2), texto guía del curso.
+
+\subsection{Reglas semánticas}
+\begin{enumerate}[label=\textbf{R\arabic*.}, leftmargin=*]
+\item Cada estación nest está ubicada en exactamente un distrito; un distrito puede tener cero o más nests.
+\item Cada drone pertenece a exactamente un modelo y tiene exactamente un nest base; un modelo puede tener cero o más drones, y un nest puede albergar varios drones, sin exceder su \at{capacidad\_drones}.
+\item Cada operador está asignado a exactamente un nest; un nest puede tener cero o más operadores.
+\item Un operador puede estar autorizado para volar un modelo de drone sobre un distrito. La autorización es propia de cada terna (operador, modelo, distrito): que un operador esté autorizado para el modelo $M$ en el distrito $D_1$ y para otro modelo en el distrito $D_2$ no lo autoriza para $M$ en $D_2$. Cada terna tiene a lo sumo una autorización vigente, con su fecha de emisión y de vencimiento.
+\item Cada ruta de vuelo sale de exactamente un nest y llega a exactamente un distrito. Se pueden definir rutas hacia distritos con \at{zona\_restringida} verdadera, pero los vuelos que las usen quedan sujetos a R9.\footnote{Corrección del Hito 2: en el Hito 1, R5 prohibía las rutas hacia distritos restringidos, lo que hacía imposible aplicar R9 y dejaba sin uso a \tb{permiso\_vuelo}.}
+\item Cada ruta está compuesta por al menos dos puntos de ruta ordenados (despegue y entrega). Un punto de ruta solo existe dentro de su ruta y se identifica por su número de secuencia dentro de ella (entidad débil). Su altitud no puede superar la \at{altitud\_max\_m} del distrito de destino.
+\item Cada vuelo es realizado por exactamente un drone, usa exactamente una batería, sigue exactamente una ruta y es supervisado por exactamente un operador. Un drone, una batería, una ruta o un operador pueden tener cero o más vuelos.
+\item Cada vuelo es de operación \at{manual}, cuando un operador lo pilota de forma remota, o \at{automatico}, cuando ejecuta el plan de vuelo cargado (la secuencia de puntos de su ruta) sin intervención directa.
+\item Un permiso de vuelo ampara exactamente un distrito y tiene fechas de emisión y de vencimiento. Un vuelo cuya ruta llega a un distrito con \at{zona\_restringida} verdadera debe estar cubierto por un permiso vigente en su fecha programada y emitido para ese distrito; los vuelos hacia distritos sin restricción no requieren permiso. Un permiso puede cubrir cero o más vuelos.
+\item El drone de un vuelo debe tener como nest base el nest del que sale la ruta, y su estado debe ser \at{disponible} al programarse el vuelo.
+\item La licencia del operador debe estar vigente en la fecha programada del vuelo, y el operador debe tener una autorización vigente para el modelo del drone y el distrito de destino de la ruta.
+\item Una batería no puede asignarse a dos vuelos cuyos intervalos (despegue, aterrizaje) se solapen. Una batería con \at{salud\_pct} menor a 70\,\% pasa a estado \at{degradada} y no puede asignarse a nuevos vuelos.
+\item Cada paquete es enviado por exactamente un cliente y debe entregarse en exactamente un distrito. Un paquete es transportado por a lo sumo un vuelo (ninguno mientras está pendiente de asignación); un vuelo puede transportar cero o más paquetes (cero en vuelos de retorno o de prueba).
+\item El distrito de entrega de un paquete debe coincidir con el distrito al que llega la ruta del vuelo que lo transporta.
+\item La suma de pesos de los paquetes de un vuelo no puede superar la \at{carga\_util\_max\_kg} del modelo del drone.
+\item Todo cliente es persona natural o empresa, y no puede ser ambas: ClientePersona y ClienteEmpresa \textsc{cubren} Cliente y no se solapan. Una persona se identifica también por su DNI (8 dígitos) y una empresa por su RUC (11 dígitos).
+\item Cada lectura de telemetría pertenece a exactamente un vuelo y se identifica por su marca de tiempo dentro de ese vuelo (entidad débil). La marca de tiempo debe estar entre el despegue y el aterrizaje del vuelo. La lectura corresponde a la batería que usa el vuelo.
+\item Dominios: \at{carga\_pct} y \at{salud\_pct} en $[0,100]$; pesos, distancias, capacidades y duraciones estrictamente positivos; \at{aterrizaje} $>$ \at{despegue}; \at{fecha\_vencimiento} $>$ \at{fecha\_emision}; \at{fecha\_entrega} $\geq$ \at{fecha\_registro}; latitudes en $[-90,90]$ y longitudes en $[-180,180]$.
+\item Un paquete en estado \at{entregado} debe tener \at{fecha\_entrega}; un paquete en estado \at{asignado}, \at{en\_ruta} o \at{entregado} debe tener un vuelo asociado.
+\item Son únicos: el código de nest, el número de serie y el registro DGAC del drone, el número de serie de la batería, el DNI, email y número de licencia del operador, el email del cliente, el código de tracking del paquete, el código de ruta y la combinación fabricante--nombre del modelo.
+\end{enumerate}
+
+\subsection{Modelo Entidad-Relación}
+El diagrama se presenta en la Figura~\ref{fig:er}, con la notación de Ramakrishnan y Gehrke (apartados 2.2 a 2.4), que resume la Figura~\ref{fig:leyenda}.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[font=\small,
+  ent/.style={draw,fill=blue!10,minimum width=1.7cm,minimum height=0.6cm},
+  rel/.style={draw,diamond,aspect=2,fill=orange!15,inner sep=1pt,minimum height=0.8cm},
+  att/.style={draw,ellipse,inner sep=1.5pt}]
+\node[ent] at (0,0) {Entidad};
+\node[ent,line width=1.6pt] at (0,-1.1) {Débil};
+\node[rel] at (3,0) {Relación};
+\node[rel,line width=1.6pt] at (3,-1.1) {Identif.};
+\node[att] at (6,0.2) {\underline{clave}};
+\node[att] (cp) at (6,-0.7) {clave parcial};
+\draw[dashed] ([xshift=-0.85cm,yshift=-0.12cm]cp.center)--([xshift=0.85cm,yshift=-0.12cm]cp.center);
+\node[draw,regular polygon,regular polygon sides=3,fill=green!10,minimum size=0.9cm,inner sep=0pt,font=\scriptsize] at (8.6,-0.2) {IsA};
+% líneas
+\node[ent,minimum width=1cm,font=\scriptsize] (a1) at (-0.6,-2.4) {E};
+\node[rel,minimum height=0.55cm,font=\scriptsize] (b1) at (1.4,-2.4) {R};
+\draw (a1)--(b1); \node[font=\scriptsize,align=center] at (0.4,-3.05) {sin restricción};
+\node[ent,minimum width=1cm,font=\scriptsize] (a2) at (2.8,-2.4) {E};
+\node[rel,minimum height=0.55cm,font=\scriptsize] (b2) at (4.8,-2.4) {R};
+\draw[-latex] (a2)--(b2); \node[font=\scriptsize,align=center] at (3.8,-3.05) {restricción de clave};
+\node[ent,minimum width=1cm,font=\scriptsize] (a3) at (6.2,-2.4) {E};
+\node[rel,minimum height=0.55cm,font=\scriptsize] (b3) at (8.2,-2.4) {R};
+\draw[line width=1.6pt] (a3)--(b3); \node[font=\scriptsize,align=center] at (7.2,-3.05) {participación total};
+\node[ent,minimum width=1cm,font=\scriptsize] (a4) at (9.6,-2.4) {E};
+\node[rel,minimum height=0.55cm,font=\scriptsize] (b4) at (11.6,-2.4) {R};
+\draw[-latex,line width=1.6pt] (a4)--(b4); \node[font=\scriptsize,align=center] at (10.6,-3.05) {clave + part. total};
+\end{tikzpicture}
+\caption{Notación E/R de Ramakrishnan y Gehrke. La flecha va de la entidad al rombo e indica que cada entidad participa como máximo en una relación (restricción de clave). La línea gruesa indica participación total; equivale a la ``doble línea'' que menciona el enunciado.}
+\label{fig:leyenda}
+\end{figure}
+
+\afterpage{%
+\begin{landscape}
+\begin{figure}[p]
+\centering
+\includegraphics[width=\linewidth,height=0.9\textheight,keepaspectratio]{er.pdf}
+\caption{Modelo Entidad-Relación de SkyNest (notación de Ramakrishnan y Gehrke).}
+\label{fig:er}
+\end{figure}
+\end{landscape}}
+
+\subsection{Especificaciones y consideraciones sobre el modelo}
+El modelo tiene 15 conjuntos de entidades: 11 fuertes, 2 subclases y 2 débiles. Las cinco tablas exigidas por el tópico corresponden a \textit{Drone}, \textit{EstacionNest}, \textit{RutaVuelo}, \textit{Paquete} y \textit{TelemetriaBateria}. A continuación se detalla cada uno.
+
+\subsubsection{Entidad Distrito}
+\textbf{Especificaciones:} Representa cada distrito de Lima Metropolitana y el Callao. Su clave es \at{ubigeo}, el código oficial del INEI, y sus atributos descriptivos son \at{nombre}, \at{provincia}, \at{zona\_restringida} y \at{altitud\_max\_m}.
+
+\textbf{Consideraciones:} Se eligió \at{ubigeo} como clave en lugar de una clave sustituta porque es un código oficial, estable y de solo 6 caracteres, y porque permitirá cruzar los datos con fuentes públicas del INEI. El distrito es el eje geográfico del modelo: de él dependen las restricciones de espacio aéreo, el destino de las rutas y el destino de los paquetes.
+
+\subsubsection{Entidad EstacionNest}
+\textbf{Especificaciones:} Almacena cada base física de despegue y aterrizaje: \at{codigo}, \at{nombre}, \at{direccion}, coordenadas, \at{capacidad\_drones}, \at{puertos\_carga} y \at{estado}. Su clave es la clave sustituta \at{id\_nest}.
+
+\textbf{Consideraciones:} Se usa clave sustituta porque el código operativo puede cambiar si la empresa reorganiza su nomenclatura; el código se conserva como clave candidata. La participación en \textit{Ubicada\_en} es total: no tiene sentido un nest sin distrito.
+
+\subsubsection{Entidad ModeloDrone}
+\textbf{Especificaciones:} Guarda las características técnicas de cada modelo de aeronave: \at{fabricante}, \at{nombre}, \at{carga\_util\_max\_kg}, \at{autonomia\_min}, \at{velocidad\_crucero\_kmh} y \at{alcance\_km}.
+
+\textbf{Consideraciones:} Se separó del drone para no repetir las mismas características técnicas en cada una de las 300 aeronaves, que es la redundancia que advierte el libro en el ap.~2.5.2. La clave candidata natural es el par (\at{fabricante}, \at{nombre}); se conserva como \texttt{UNIQUE}.
+
+\subsubsection{Entidad Drone}
+\textbf{Especificaciones:} Representa cada aeronave física: \at{numero\_serie}, \at{registro\_dgac}, \at{fecha\_adquisicion}, \at{estado} y \at{horas\_vuelo}.
+
+\textbf{Consideraciones:} Tiene dos claves candidatas naturales, el número de serie del fabricante y el código de registro ante la DGAC, ambas declaradas \texttt{UNIQUE}. El atributo \at{horas\_vuelo} sí se almacena, aunque podría derivarse de los vuelos, porque incluye horas previas a la puesta en marcha del sistema y porque se consulta en cada programación de vuelo; se mantendrá actualizado con un trigger.
+
+\subsubsection{Entidad Bateria}
+\textbf{Especificaciones:} Registra cada batería intercambiable: \at{numero\_serie}, \at{quimica}, \at{capacidad\_mah}, \at{voltaje\_nominal\_v}, \at{ciclos\_carga}, \at{salud\_pct} y \at{estado}.
+
+\textbf{Consideraciones:} Se modela como entidad propia y no como atributo del drone porque las baterías se intercambian entre aeronaves y porque su degradación es el dato central del mantenimiento preventivo. La batería que usa cada vuelo se captura con la relación \textit{Usa}, de modo que el historial de uso se obtiene consultando los vuelos.
+
+\subsubsection{Entidad Operador}
+\textbf{Especificaciones:} Guarda al piloto RPAS: \at{dni}, \at{nombres}, \at{apellidos}, \at{email}, \at{telefono}, \at{nro\_licencia} y \at{venc\_licencia}.
+
+\textbf{Consideraciones:} Tiene tres claves candidatas naturales (DNI, email y número de licencia). Participa de forma total en \textit{Asignado\_a}, porque todo operador pertenece a un nest, y de forma parcial en \textit{Autorizado}, porque un operador recién contratado puede no tener autorizaciones todavía.
+
+\subsubsection{Entidad Cliente}
+\textbf{Especificaciones:} Superclase con los datos comunes de quien envía paquetes: \at{email}, \at{telefono} y \at{fecha\_registro}.
+
+\textbf{Consideraciones:} Se especializa en \textit{ClientePersona} y \textit{ClienteEmpresa} porque los atributos identificatorios son excluyentes. Se declara la cobertura (\textsc{cubren}) y, al no declararse \textsc{solapa a}, las subclases no se solapan. Se mantiene la superclase porque \textit{Paquete} necesita relacionarse con cualquier cliente sin importar su tipo.
+
+\subsubsection{Entidad ClientePersona}
+\textbf{Especificaciones:} Subclase con \at{dni}, \at{nombres} y \at{apellidos}.
+
+\textbf{Consideraciones:} Hereda la clave \at{id\_cliente} de la superclase. El DNI es clave candidata dentro de la subclase, no de \textit{Cliente}, porque una empresa no tiene DNI.
+
+\subsubsection{Entidad ClienteEmpresa}
+\textbf{Especificaciones:} Subclase con \at{ruc}, \at{razon\_social} y \at{contacto}.
+
+\textbf{Consideraciones:} Hereda la clave de la superclase. El RUC es clave candidata dentro de la subclase. Este desdoblamiento permite declarar ambos campos obligatorios en su propia tabla, en lugar de dejarlos nulos en una tabla única.
+
+\subsubsection{Entidad Paquete}
+\textbf{Especificaciones:} Es el objeto que se transporta: \at{codigo\_tracking}, peso y dimensiones, \at{prioridad}, \at{es\_fragil}, datos del destinatario, dirección y coordenadas de entrega, \at{estado}, fechas y \at{costo\_envio}.
+
+\textbf{Consideraciones:} El código de tracking es clave candidata, pero la clave principal es sustituta porque la tabla llegará al millón de registros y se relaciona con la telemetría y los vuelos. La participación en \textit{Transporta} es parcial en ambos lados: un paquete recién registrado aún no tiene vuelo, y un vuelo de retorno o de prueba no lleva paquetes. Los atributos de dimensiones y de destinatario se escribieron ya descompuestos, para que la traducción al modelo relacional sea directa.
+
+\subsubsection{Entidad RutaVuelo}
+\textbf{Especificaciones:} Corredor aéreo aprobado: \at{codigo}, \at{distancia\_km}, \at{altitud\_crucero\_m}, \at{duracion\_est\_min} y \at{activa}.
+
+\textbf{Consideraciones:} Una ruta sale de un nest y llega a un distrito, y ambas participaciones son totales. Puede haber varias rutas entre el mismo nest y el mismo distrito (corredores distintos), por lo que el par (origen, destino) no es clave: por eso la distancia y la duración dependen de la ruta y no de ese par, lo que evita una violación de la FNBC.
+
+\subsubsection{Entidad PuntoRuta}
+\textbf{Especificaciones:} Entidad débil que representa cada waypoint de una ruta: \at{latitud}, \at{longitud}, \at{altitud\_m} y \at{tipo}. Su clave parcial es \at{nro\_secuencia}.
+
+\textbf{Consideraciones:} Cumple las dos condiciones del ap.~2.4.3: participa en una relación identificadora binaria de uno a varios con \textit{RutaVuelo} y su participación es total. Un mismo número de secuencia puede repetirse en rutas distintas, por lo que solo identifica dentro de su ruta. Se modela como entidad y no como atributo multivaluado porque cada punto tiene varios atributos propios y un orden.
+
+\subsubsection{Entidad Vuelo}
+\textbf{Especificaciones:} Ejecución concreta de una ruta: \at{fecha\_programada}, \at{despegue}, \at{aterrizaje}, \at{estado} y \at{distancia\_real\_km}.
+
+\textbf{Consideraciones:} Es el centro del modelo: vincula drone, batería, ruta y operador, y a su vez es propietaria de la telemetría y transporta paquetes. No se almacena el peso total transportado, que se obtiene sumando los paquetes del vuelo, ni el nest de origen, que se obtiene de la ruta.
+
+\subsubsection{Entidad PermisoVuelo}
+\textbf{Especificaciones:} Representa el permiso que la autoridad aeronáutica otorga para operar sobre un distrito, con \at{nro\_expediente}, \at{fecha\_emision}, \at{fecha\_vencimiento} y \at{estado}. Su clave es \at{id\_permiso} y el número de expediente es clave candidata.
+
+\textbf{Consideraciones:} Se modela como conjunto de entidades y no como atributo de Vuelo por dos razones: el permiso tiene identidad y vigencia propias, independientes de cualquier vuelo, y un mismo permiso puede cubrir varios vuelos hacia el mismo distrito, de modo que guardarlo en Vuelo repetiría el número y las fechas en cada fila. Su participación en \textit{Ampara} es total, porque todo permiso se emite para un distrito.
+
+\subsubsection{Entidad TelemetriaBateria}
+\textbf{Especificaciones:} Entidad débil con las lecturas periódicas de la batería durante un vuelo: \at{voltaje\_v}, \at{corriente\_a}, \at{temperatura\_c} y \at{carga\_pct}. Su clave parcial es \at{marca\_tiempo}.
+
+\textbf{Consideraciones:} Su propietaria identificadora es \textit{Vuelo}, con participación total. Dos vuelos distintos pueden tener lecturas con la misma marca de tiempo, de modo que esta solo identifica dentro del vuelo. Es la tabla de mayor volumen del sistema y la que determinará el diseño de índices del Hito 2.
+
+\subsubsection{Conjuntos de relaciones}
+La Tabla~\ref{tab:rel} resume los 18 conjuntos de relaciones y la jerarquía de clases. En la columna ``Restricción de clave'' se indica la entidad desde la que sale la flecha, es decir, la que participa como máximo en una relación; en ``Participación total'', la entidad unida por doble línea.
+
+\begin{table}[H]
+\centering\small
+\caption{Conjuntos de relaciones del modelo E/R y sus restricciones.}
+\label{tab:rel}
+\begin{tabularx}{\textwidth}{l l l X}
+\toprule
+Relación & Entidades & Restricción de clave & Participación total \\
+\midrule
+Ubicada\_en & EstacionNest -- Distrito & EstacionNest & EstacionNest \\
+Es\_modelo & Drone -- ModeloDrone & Drone & Drone \\
+Base\_en & Drone -- EstacionNest & Drone & Drone \\
+Asignado\_a & Operador -- EstacionNest & Operador & Operador \\
+Autorizado (ternaria) & Operador -- ModeloDrone -- Distrito & Ninguna & Ninguna \\
+Sale\_de & RutaVuelo -- EstacionNest & RutaVuelo & RutaVuelo \\
+Llega\_a & RutaVuelo -- Distrito & RutaVuelo & RutaVuelo \\
+Compuesta\_por (identif.) & PuntoRuta -- RutaVuelo & PuntoRuta & PuntoRuta \\
+Realiza & Vuelo -- Drone & Vuelo & Vuelo \\
+Usa & Vuelo -- Bateria & Vuelo & Vuelo \\
+Sigue & Vuelo -- RutaVuelo & Vuelo & Vuelo \\
+Supervisa & Vuelo -- Operador & Vuelo & Vuelo \\
+Transporta & Paquete -- Vuelo & Paquete & Ninguna \\
+Envia & Paquete -- Cliente & Paquete & Paquete \\
+Entregar\_en & Paquete -- Distrito & Paquete & Paquete \\
+Registra (identif.) & TelemetriaBateria -- Vuelo & TelemetriaBateria & TelemetriaBateria \\
+Ampara & PermisoVuelo -- Distrito & PermisoVuelo & PermisoVuelo \\
+Cubierto\_por & Vuelo -- PermisoVuelo & Vuelo & Ninguna \\
+\midrule
+IsA & Cliente $\supset$ Persona, Empresa & Sin solapamiento & Cobertura total (\textsc{cubren}) \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsubsection{Consideraciones generales de diseño}
+\begin{itemize}
+\item \textbf{Vuelo como conjunto de entidades y no como relación.} Un vuelo vincula un drone, una batería, una ruta y un operador, por lo que podría pensarse como una relación entre ellos. Pero en el modelo ER cada relación debe quedar identificada de manera unívoca por sus entidades participantes (Ramakrishnan y Gehrke, ap.~2.3), y un mismo drone puede repetir la misma ruta, con la misma batería y el mismo operador, muchas veces. Además, un vuelo tiene atributos propios y participa en otras relaciones (\textit{Transporta} y \textit{Registra}). Por eso se modela como conjunto de entidades, igual que el libro introduce un conjunto de entidades cuando una relación necesitaría repetirse (ap.~2.5.1).
+\item \textbf{Autorizado como relación ternaria.} Siguiendo el criterio del ejemplo \textit{Contratos} del libro (ap.~2.5.3), la autorización asocia de manera inherente tres entidades. Tres relaciones binarias (operador--modelo, operador--distrito y modelo--distrito) no la expresan: que el operador pueda volar el modelo $M$ y pueda volar en el distrito $D$ no implica que esté autorizado para volar $M$ en $D$. Tampoco podrían representar los atributos \at{fecha\_emision} y \at{fecha\_vencimiento} de cada autorización. Cada terna aparece a lo sumo una vez, por lo que la relación queda identificada por sus participantes; al renovarse, se actualizan sus fechas.
+\item \textbf{Una batería por vuelo.} Se asume que cada drone usa una sola batería (o pack) por vuelo. Así, la batería de cada lectura de telemetría queda determinada por el vuelo y no hace falta una segunda propietaria identificadora, lo que el libro no admite, porque la relación identificadora debe ser binaria (ap.~2.5.3).
+\item \textbf{Posición fuera de la telemetría de batería.} La posición del drone (latitud, longitud y altitud) no describe a la batería. Se deja fuera de \textit{TelemetriaBateria} y del alcance del proyecto.
+\item \textbf{Tipo de operación del vuelo.} El atributo \at{tipo\_operacion} de \textit{Vuelo} distingue el vuelo \at{manual}, pilotado de forma remota, del \at{automatico}, que ejecuta el plan de vuelo cargado. El plan de vuelo en sí no es un atributo: es la secuencia ordenada de \textit{PuntoRuta} de la ruta que sigue el vuelo.
+\item \textbf{Datos que no se almacenan como atributos.} El peso total de un vuelo se calcula sumando los pesos de sus paquetes, y el historial de uso de una batería se obtiene de los vuelos que la usan. Guardarlos repetiría información, que es lo que el libro advierte en el ap.~2.5.2; se expondrán mediante vistas en el Hito 2.
+\end{itemize}
+
+% ================================================================ 3
+\section{Modelo Relacional}
+
+\subsection{Modelo Relacional}
+Notación: \pk{subrayado} = clave principal; \fk{cursiva} = clave externa; UQ = clave candidata.
+
+\begin{enumerate}[leftmargin=*, label=\arabic*.]
+\item \tb{distrito}(\pk{ubigeo}, nombre, provincia, zona\_restringida, altitud\_max\_m)
+
+\item \tb{estacion\_nest}(\pk{id\_nest}, codigo, nombre, direccion, latitud, longitud, capacidad\_drones, puertos\_carga, estado, \fk{ubigeo})\\
+UQ(codigo); ubigeo $\rightarrow$ distrito
+
+\item \tb{modelo\_drone}(\pk{id\_modelo}, fabricante, nombre, carga\_util\_max\_kg, autonomia\_min, velocidad\_crucero\_kmh, alcance\_km)\\
+UQ(fabricante, nombre)
+
+\item \tb{drone}(\pk{id\_drone}, numero\_serie, registro\_dgac, fecha\_adquisicion, estado, horas\_vuelo, \fk{id\_modelo}, \fk{id\_nest\_base})\\
+UQ(numero\_serie); UQ(registro\_dgac); id\_modelo $\rightarrow$ modelo\_drone; id\_nest\_base $\rightarrow$ estacion\_nest
+
+\item \tb{bateria}(\pk{id\_bateria}, numero\_serie, quimica, capacidad\_mah, voltaje\_nominal\_v, ciclos\_carga, salud\_pct, estado)\\
+UQ(numero\_serie)
+
+\item \tb{operador}(\pk{id\_operador}, dni, nombres, apellidos, email, telefono, nro\_licencia, venc\_licencia, \fk{id\_nest})\\
+UQ(dni); UQ(email); UQ(nro\_licencia); id\_nest $\rightarrow$ estacion\_nest
+
+\item \tb{autorizacion}(\pkfk{id\_operador}, \pkfk{id\_modelo}, \pkfk{ubigeo}, fecha\_emision, fecha\_vencimiento)\\
+id\_operador $\rightarrow$ operador; id\_modelo $\rightarrow$ modelo\_drone; ubigeo $\rightarrow$ distrito
+
+\item \tb{cliente}(\pk{id\_cliente}, email, telefono, fecha\_registro)\\
+UQ(email)
+
+\item \tb{cliente\_persona}(\pkfk{id\_cliente}, dni, nombres, apellidos)\\
+UQ(dni); id\_cliente $\rightarrow$ cliente (ON DELETE CASCADE)
+
+\item \tb{cliente\_empresa}(\pkfk{id\_cliente}, ruc, razon\_social, contacto)\\
+UQ(ruc); id\_cliente $\rightarrow$ cliente (ON DELETE CASCADE)
+
+\item \tb{ruta\_vuelo}(\pk{id\_ruta}, codigo, \fk{id\_nest\_origen}, \fk{ubigeo\_destino}, distancia\_km, altitud\_crucero\_m, duracion\_est\_min, activa)\\
+UQ(codigo); id\_nest\_origen $\rightarrow$ estacion\_nest; ubigeo\_destino $\rightarrow$ distrito
+
+\item \tb{punto\_ruta}(\pkfk{id\_ruta}, \pk{nro\_secuencia}, latitud, longitud, altitud\_m, tipo)\\
+id\_ruta $\rightarrow$ ruta\_vuelo (ON DELETE CASCADE)
+
+\item \tb{permiso\_vuelo}(\pk{id\_permiso}, nro\_expediente, \fk{ubigeo}, fecha\_emision, fecha\_vencimiento, estado)\\
+UQ(nro\_expediente); ubigeo $\rightarrow$ distrito
+
+\item \tb{vuelo}(\pk{id\_vuelo}, \fk{id\_drone}, \fk{id\_bateria}, \fk{id\_ruta}, \fk{id\_operador}, \fk{id\_permiso}, fecha\_programada, despegue, aterrizaje, estado, tipo\_operacion, distancia\_real\_km)\\
+id\_drone $\rightarrow$ drone; id\_bateria $\rightarrow$ bateria; id\_ruta $\rightarrow$ ruta\_vuelo; id\_operador $\rightarrow$ operador; id\_permiso $\rightarrow$ permiso\_vuelo (admite NULL)
+
+\item \tb{paquete}(\pk{id\_paquete}, codigo\_tracking, \fk{id\_cliente}, \fk{id\_vuelo}, \fk{ubigeo\_destino}, peso\_kg, largo\_cm, ancho\_cm, alto\_cm, prioridad, es\_fragil, destinatario\_nombre, destinatario\_telefono, direccion\_destino, lat\_destino, lon\_destino, estado, fecha\_registro, fecha\_entrega, costo\_envio)\\
+UQ(codigo\_tracking); id\_cliente $\rightarrow$ cliente; id\_vuelo $\rightarrow$ vuelo (admite NULL); ubigeo\_destino $\rightarrow$ distrito
+
+\item \tb{telemetria\_bateria}(\pkfk{id\_vuelo}, \pk{marca\_tiempo}, voltaje\_v, corriente\_a, temperatura\_c, carga\_pct)\\
+id\_vuelo $\rightarrow$ vuelo (ON DELETE CASCADE)
+\end{enumerate}
+
+\paragraph{Normalización.} Todas las relaciones están en \textbf{forma normal de Boyce-Codd (FNBC)} y, por tanto, en 3FN:
+\begin{itemize}
+\item \textbf{1FN}: todos los atributos son atómicos y no hay atributos multivaluados; los puntos de una ruta se separaron en \tb{punto\_ruta}.
+\item \textbf{2FN}: en las tablas con clave compuesta (\tb{autorizacion}, \tb{punto\_ruta} y \tb{telemetria\_bateria}), cada atributo no clave depende de la clave completa. Por ejemplo, las fechas de una autorización dependen de la terna completa (operador, modelo, distrito), y las mediciones de una lectura dependen del par (vuelo, marca de tiempo).
+\item \textbf{3FN/FNBC}: los únicos determinantes de cada tabla son sus claves candidatas. Por ejemplo, en \tb{paquete} los datos del cliente no se repiten, sino que se obtienen mediante \at{id\_cliente}. En \tb{vuelo}, el nest de origen no se almacena porque se deriva de la ruta. En \tb{drone}, las características técnicas están en \tb{modelo\_drone}. En \tb{ruta\_vuelo}, la distancia depende de la ruta y no del par (origen, destino), porque puede haber varios corredores entre el mismo nest y el mismo distrito. En \tb{telemetria\_bateria} no se guarda \at{id\_bateria}: dependería de \at{id\_vuelo} (dependencia transitiva), así que la batería se obtiene del vuelo.
+\end{itemize}
+
+\paragraph{Restricciones de integridad adicionales.} Varias reglas semánticas no se pueden expresar con claves ni con claves externas; el libro indica que requieren restricciones de tabla o asertos (ap.~3.5.4 y 3.5.6). Como PostgreSQL no implementa \texttt{CREATE ASSERTION}, se implementarán en el Hito 2 con triggers y restricciones \texttt{CHECK}:
+\begin{enumerate}[label=(\roman*)]
+\item cobertura y no solapamiento de la jerarquía de clientes;
+\item peso total por vuelo $\leq$ carga útil del modelo;
+\item licencia vigente y autorización vigente del operador para el modelo y el distrito;
+\item permiso vigente para todo vuelo cuya ruta llegue a un distrito restringido;
+\item coincidencia entre el distrito de entrega del paquete y el distrito al que llega la ruta;
+\item nest base del drone igual al nest de salida de la ruta;
+\item no solapamiento de vuelos que usan la misma batería, mediante una restricción \texttt{EXCLUDE} con \texttt{btree\_gist};
+\item marca de tiempo de la telemetría dentro del intervalo del vuelo;
+\item capacidad del nest no excedida;
+\item al menos dos puntos por ruta.
+\end{enumerate}
+
+\subsection{Especificaciones de transformación}
+La traducción sigue el procedimiento del apartado 3.5 de Ramakrishnan y Gehrke.
+
+\subsubsection{Entidades}
+Cada conjunto de entidades fuerte se tradujo a una tabla cuyos campos son sus atributos y cuya clave principal es la clave del conjunto (ap.~3.5.1). En las entidades cuyos identificadores naturales pueden cambiar o son largos, se usó una clave sustituta entera (\at{id\_*}, tipo \texttt{SERIAL}: entero de 4 bytes que PostgreSQL numera automáticamente y admite hasta unos 2\,100 millones de valores, holgado para el volumen estimado), y las claves naturales se conservaron como claves candidatas (\texttt{UNIQUE}), por ejemplo \at{numero\_serie}, \at{codigo\_tracking} o \at{dni}. En \tb{distrito} se usó como clave principal el código natural \at{ubigeo}, que es estable y oficial.
+
+\subsubsection{Entidades débiles}
+Según el ap.~3.5.5, cada conjunto de entidades débiles se tradujo junto con su relación identificadora a una sola tabla. La clave principal es la clave parcial más la clave de la propietaria identificadora, y la clave externa usa \texttt{ON DELETE CASCADE} para que las entidades débiles se eliminen junto con su propietaria:
+\begin{itemize}
+\item \textbf{PuntoRuta} + \textit{Compuesta\_por} $\rightarrow$ \tb{punto\_ruta}, con clave principal (\at{id\_ruta}, \at{nro\_secuencia}).
+\item \textbf{TelemetriaBateria} + \textit{Registra} $\rightarrow$ \tb{telemetria\_bateria}, con clave principal (\at{id\_vuelo}, \at{marca\_tiempo}).
+\end{itemize}
+En ambos casos la participación total queda garantizada porque la clave externa forma parte de la clave principal, lo que la hace implícitamente \texttt{NOT NULL}.
+
+\subsubsection{Entidades superclase/subclases}
+La jerarquía \textit{Cliente} $\supset$ \{\textit{ClientePersona}, \textit{ClienteEmpresa}\} se tradujo con el \textbf{primer enfoque} del ap.~3.5.6: una tabla por cada conjunto de entidades. \tb{cliente} guarda los atributos comunes y cada subclase tiene su tabla, cuya clave principal (\at{id\_cliente}) es a la vez clave externa hacia \tb{cliente}, con eliminación en cascada.
+
+Se descartó el segundo enfoque (una tabla por subclase sin superclase) por dos razones. La primera es que \tb{paquete} necesita una única clave externa hacia ``el cliente'', sin importar su tipo. La segunda es que muchas consultas examinan a todos los clientes, y el libro señala que el primer enfoque las facilita. Como indica el libro, las restricciones de cobertura y de solapamiento solo pueden expresarse con asertos, por lo que se implementarán con triggers.
+
+\subsubsection{Relaciones binarias}
+Todas las relaciones binarias del modelo tienen restricción de clave en uno de sus lados, así que ninguna genera tabla propia. Se tradujeron con el \textbf{segundo enfoque} del ap.~3.5.3: la clave de la otra entidad se añade como clave externa a la tabla de la entidad con restricción de clave. El libro recomienda este enfoque, sobre todo cuando además hay participación total (ap.~3.5.4). Cuando la participación es total, la clave externa se declara \texttt{NOT NULL} con \texttt{ON DELETE NO ACTION}, de modo que no se pueda borrar, por ejemplo, un drone que ya tiene vuelos registrados.
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{Ubicada\_en} (EstacionNest--Distrito, de una a varias, total en EstacionNest): \at{ubigeo} pasa a \tb{estacion\_nest} como clave externa \texttt{NOT NULL}.
+\item \textbf{Es\_modelo} (Drone--ModeloDrone, de una a varias, total en Drone): \at{id\_modelo} pasa a \tb{drone} como clave externa \texttt{NOT NULL}.
+\item \textbf{Base\_en} (Drone--EstacionNest, de una a varias, total en Drone): \at{id\_nest\_base} pasa a \tb{drone} como clave externa \texttt{NOT NULL}.
+\item \textbf{Asignado\_a} (Operador--EstacionNest, de una a varias, total en Operador): \at{id\_nest} pasa a \tb{operador} como clave externa \texttt{NOT NULL}.
+\item \textbf{Sale\_de} (RutaVuelo--EstacionNest, de una a varias, total en RutaVuelo): \at{id\_nest\_origen} pasa a \tb{ruta\_vuelo} como clave externa \texttt{NOT NULL}.
+\item \textbf{Llega\_a} (RutaVuelo--Distrito, de una a varias, total en RutaVuelo): \at{ubigeo\_destino} pasa a \tb{ruta\_vuelo} como clave externa \texttt{NOT NULL}.
+\item \textbf{Realiza}, \textbf{Usa}, \textbf{Sigue} y \textbf{Supervisa} (Vuelo con Drone, Bateria, RutaVuelo y Operador; todas de una a varias y totales en Vuelo): las cuatro claves pasan a \tb{vuelo} como claves externas \texttt{NOT NULL}.
+\item \textbf{Envia} (Paquete--Cliente, de una a varias, total en Paquete): \at{id\_cliente} pasa a \tb{paquete} como clave externa \texttt{NOT NULL}.
+\item \textbf{Entregar\_en} (Paquete--Distrito, de una a varias, total en Paquete): \at{ubigeo\_destino} pasa a \tb{paquete} como clave externa \texttt{NOT NULL}.
+\item \textbf{Ampara} (PermisoVuelo--Distrito, de una a varias, total en PermisoVuelo): \at{ubigeo} pasa a \tb{permiso\_vuelo} como clave externa \texttt{NOT NULL}.
+\item \textbf{Cubierto\_por} (Vuelo--PermisoVuelo, con restricción de clave en Vuelo y participación parcial en ambos lados): \at{id\_permiso} pasa a \tb{vuelo} como clave externa que \textbf{admite NULL}, porque los vuelos hacia distritos sin restricción no requieren permiso.
+\item \textbf{Transporta} (Paquete--Vuelo, de una a varias, con restricción de clave en Paquete y participación parcial en ambos lados): \at{id\_vuelo} pasa a \tb{paquete} como clave externa que \textbf{admite NULL} mientras el paquete no tenga vuelo asignado. El libro advierte que este enfoque puede dejar valores nulos (ap.~3.5.3); se aceptan porque evitan una tabla adicional y una combinación de dos tablas en la consulta más frecuente, el seguimiento de un paquete.
+\item \textbf{Compuesta\_por} y \textbf{Registra} son relaciones identificadoras y ya se trataron en el apartado de entidades débiles: no generan tabla propia, sino que se absorben en \tb{punto\_ruta} y \tb{telemetria\_bateria}.
+\end{enumerate}
+
+No hay relaciones binarias de varias a varias en el modelo, por lo que ninguna relación binaria requirió tabla propia.
+
+\subsubsection{Relaciones ternarias}\label{sec:ternaria}
+La relación ternaria \textbf{Autorizado} (Operador, ModeloDrone, Distrito) no tiene restricciones de clave ni de participación. Se tradujo como indica el ap.~3.5.2 (ejemplo \textit{Trabaja\_en2}) a la tabla \tb{autorizacion}. Sus campos son las claves principales de los tres conjuntos de entidades participantes, cada una declarada como clave externa, más los atributos descriptivos \at{fecha\_emision} y \at{fecha\_vencimiento}. Como no hay restricciones de clave, el conjunto de las tres claves externas (\at{id\_operador}, \at{id\_modelo}, \at{ubigeo}) es clave candidata y se elige como clave principal, lo que hace implícitamente \texttt{NOT NULL} cada uno de esos campos.
+
+\subsection{Diccionario de datos}
+{\small
+\setlength{\tabcolsep}{4pt}
+\newcommand{\dict}[1]{%
+\par\noindent\textbf{Tabla \texttt{#1}}\par\nopagebreak}
+\newenvironment{dtab}{%
+\begin{longtable}{>{\ttfamily\raggedright\arraybackslash}p{3.3cm} >{\raggedright\arraybackslash}p{2.5cm} c >{\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}p{4.3cm}}
+\toprule
+\normalfont\textbf{Atributo} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Restricciones} & \textbf{Descripción}\\
+\midrule\endhead}{\bottomrule\end{longtable}}
+
+\dict{distrito}
+\begin{dtab}
+ubigeo & CHAR(6) & No & PK; solo dígitos & Código UBIGEO del INEI \\
+nombre & VARCHAR(60) & No & & Nombre del distrito \\
+provincia & VARCHAR(30) & No & IN ('Lima', 'Callao') & Provincia \\
+zona\_restringida & BOOLEAN & No & DEFAULT FALSE & Espacio aéreo restringido \\
+altitud\_max\_m & NUMERIC(5,1) & No & $> 0$; DEFAULT 120 & Altitud máxima de vuelo permitida (m) \\
+\end{dtab}
+
+\dict{estacion\_nest}
+\begin{dtab}
+id\_nest & SERIAL & No & PK & Identificador del nest \\
+codigo & VARCHAR(12) & No & UNIQUE & Código operativo (p.\,ej. NST-MIR-01) \\
+nombre & VARCHAR(80) & No & & Nombre de la estación \\
+direccion & VARCHAR(150) & No & & Dirección física \\
+latitud & NUMERIC(9,6) & No & $[-90,90]$ & Latitud \\
+longitud & NUMERIC(9,6) & No & $[-180,180]$ & Longitud \\
+capacidad\_drones & SMALLINT & No & $> 0$ & Máximo de drones con base aquí \\
+puertos\_carga & SMALLINT & No & $\geq 0$ & Número de puertos de carga \\
+estado & VARCHAR(15) & No & IN ('operativa', 'mantenimiento', 'inactiva') & Estado del nest \\
+ubigeo & CHAR(6) & No & FK $\rightarrow$ distrito & Distrito donde se ubica \\
+\end{dtab}
+
+\dict{modelo\_drone}
+\begin{dtab}
+id\_modelo & SERIAL & No & PK & Identificador del modelo \\
+fabricante & VARCHAR(50) & No & UNIQUE(fabricante, nombre) & Fabricante \\
+nombre & VARCHAR(50) & No & & Nombre comercial \\
+carga\_util\_max\_kg & NUMERIC(5,2) & No & $> 0$ & Carga útil máxima (kg) \\
+autonomia\_min & SMALLINT & No & $> 0$ & Autonomía con carga (min) \\
+velocidad\_crucero\_kmh & NUMERIC(5,1) & No & $> 0$ & Velocidad de crucero (km/h) \\
+alcance\_km & NUMERIC(5,1) & No & $> 0$ & Alcance máximo (km) \\
+\end{dtab}
+
+\dict{drone}
+\begin{dtab}
+id\_drone & SERIAL & No & PK & Identificador del drone \\
+numero\_serie & VARCHAR(30) & No & UNIQUE & Número de serie del fabricante \\
+registro\_dgac & VARCHAR(20) & No & UNIQUE & Código de registro RPAS ante la DGAC \\
+fecha\_adquisicion & DATE & No & & Fecha de compra \\
+estado & VARCHAR(15) & No & IN ('disponible', 'en\_vuelo', 'cargando', 'mantenimiento', 'baja') & Estado actual \\
+horas\_vuelo & NUMERIC(8,2) & No & $\geq 0$; DEFAULT 0 & Horas de vuelo acumuladas \\
+id\_modelo & INTEGER & No & FK $\rightarrow$ modelo\_drone & Modelo del drone \\
+id\_nest\_base & INTEGER & No & FK $\rightarrow$ estacion\_nest & Nest base \\
+\end{dtab}
+
+\dict{bateria}
+\begin{dtab}
+id\_bateria & SERIAL & No & PK & Identificador de la batería \\
+numero\_serie & VARCHAR(30) & No & UNIQUE & Número de serie \\
+quimica & VARCHAR(10) & No & IN ('LiPo', 'Li-ion', 'LiHV') & Química de la celda \\
+capacidad\_mah & INTEGER & No & $> 0$ & Capacidad nominal (mAh) \\
+voltaje\_nominal\_v & NUMERIC(5,2) & No & $> 0$ & Voltaje nominal (V) \\
+ciclos\_carga & INTEGER & No & $\geq 0$; DEFAULT 0 & Ciclos de carga acumulados \\
+salud\_pct & NUMERIC(5,2) & No & $[0,100]$ & Estado de salud (SoH) \\
+estado & VARCHAR(12) & No & IN ('operativa', 'degradada', 'baja') & Estado de la batería \\
+\end{dtab}
+
+\dict{operador}
+\begin{dtab}
+id\_operador & SERIAL & No & PK & Identificador del operador \\
+dni & CHAR(8) & No & UNIQUE; 8 dígitos & DNI \\
+nombres & VARCHAR(60) & No & & Nombres \\
+apellidos & VARCHAR(60) & No & & Apellidos \\
+email & VARCHAR(100) & No & UNIQUE & Correo electrónico \\
+telefono & VARCHAR(15) & Sí & & Teléfono \\
+nro\_licencia & VARCHAR(20) & No & UNIQUE & Licencia de piloto RPAS \\
+venc\_licencia & DATE & No & & Vencimiento de la licencia \\
+id\_nest & INTEGER & No & FK $\rightarrow$ estacion\_nest & Nest asignado \\
+\end{dtab}
+
+\dict{autorizacion}
+\begin{dtab}
+id\_operador & INTEGER & No & PK; FK $\rightarrow$ operador & Operador autorizado \\
+id\_modelo & INTEGER & No & PK; FK $\rightarrow$ modelo\_drone & Modelo de drone autorizado \\
+ubigeo & CHAR(6) & No & PK; FK $\rightarrow$ distrito & Distrito autorizado \\
+fecha\_emision & DATE & No & & Fecha de emisión \\
+fecha\_vencimiento & DATE & No & $>$ fecha\_emision & Fecha de vencimiento \\
+\end{dtab}
+
+\dict{cliente}
+\begin{dtab}
+id\_cliente & SERIAL & No & PK & Identificador del cliente \\
+email & VARCHAR(100) & No & UNIQUE & Correo electrónico \\
+telefono & VARCHAR(15) & Sí & & Teléfono \\
+fecha\_registro & TIMESTAMP & No & DEFAULT now() & Fecha de alta \\
+\end{dtab}
+
+\dict{cliente\_persona}
+\begin{dtab}
+id\_cliente & INTEGER & No & PK; FK $\rightarrow$ cliente & Cliente persona natural \\
+dni & CHAR(8) & No & UNIQUE; 8 dígitos & DNI \\
+nombres & VARCHAR(60) & No & & Nombres \\
+apellidos & VARCHAR(60) & No & & Apellidos \\
+\end{dtab}
+
+\dict{cliente\_empresa}
+\begin{dtab}
+id\_cliente & INTEGER & No & PK; FK $\rightarrow$ cliente & Cliente empresa \\
+ruc & CHAR(11) & No & UNIQUE; 11 dígitos & RUC \\
+razon\_social & VARCHAR(120) & No & & Razón social \\
+contacto & VARCHAR(80) & Sí & & Persona de contacto \\
+\end{dtab}
+
+\dict{ruta\_vuelo}
+\begin{dtab}
+id\_ruta & SERIAL & No & PK & Identificador de la ruta \\
+codigo & VARCHAR(15) & No & UNIQUE & Código de la ruta \\
+id\_nest\_origen & INTEGER & No & FK $\rightarrow$ estacion\_nest & Nest del que sale \\
+ubigeo\_destino & CHAR(6) & No & FK $\rightarrow$ distrito & Distrito al que llega \\
+distancia\_km & NUMERIC(6,2) & No & $> 0$ & Distancia de la ruta (km) \\
+altitud\_crucero\_m & NUMERIC(5,1) & No & $> 0$ & Altitud de crucero (m) \\
+duracion\_est\_min & SMALLINT & No & $> 0$ & Duración estimada (min) \\
+activa & BOOLEAN & No & DEFAULT TRUE & Ruta habilitada \\
+\end{dtab}
+
+\dict{punto\_ruta}
+\begin{dtab}
+id\_ruta & INTEGER & No & PK; FK $\rightarrow$ ruta\_vuelo & Ruta propietaria \\
+nro\_secuencia & SMALLINT & No & PK; $\geq 1$ & Orden del punto en la ruta (clave parcial) \\
+latitud & NUMERIC(9,6) & No & $[-90,90]$ & Latitud \\
+longitud & NUMERIC(9,6) & No & $[-180,180]$ & Longitud \\
+altitud\_m & NUMERIC(5,1) & No & $\geq 0$ & Altitud del punto (m) \\
+tipo & VARCHAR(12) & No & IN ('despegue', 'paso', 'entrega', 'aterrizaje') & Tipo de punto \\
+\end{dtab}
+
+\dict{permiso\_vuelo}
+\begin{dtab}
+id\_permiso & SERIAL & No & PK & Identificador del permiso \\
+nro\_expediente & VARCHAR(20) & No & UNIQUE & Número de expediente ante la autoridad \\
+ubigeo & CHAR(6) & No & FK $\rightarrow$ distrito & Distrito que ampara el permiso \\
+fecha\_emision & DATE & No & & Fecha de emisión \\
+fecha\_vencimiento & DATE & No & $>$ fecha\_emision & Fecha de vencimiento \\
+estado & VARCHAR(12) & No & IN ('vigente', 'vencido', 'revocado') & Estado del permiso \\
+\end{dtab}
+
+\dict{vuelo}
+\begin{dtab}
+id\_vuelo & SERIAL & No & PK & Identificador del vuelo \\
+id\_drone & INTEGER & No & FK $\rightarrow$ drone & Drone que vuela \\
+id\_bateria & INTEGER & No & FK $\rightarrow$ bateria & Batería usada \\
+id\_ruta & INTEGER & No & FK $\rightarrow$ ruta\_vuelo & Ruta seguida \\
+id\_operador & INTEGER & No & FK $\rightarrow$ operador & Operador supervisor \\
+id\_permiso & INTEGER & Sí & FK $\rightarrow$ permiso\_vuelo & Permiso que ampara el vuelo \\
+fecha\_programada & TIMESTAMP & No & & Hora programada de salida \\
+despegue & TIMESTAMP & Sí & & Hora real de despegue \\
+aterrizaje & TIMESTAMP & Sí & $>$ despegue & Hora real de aterrizaje \\
+estado & VARCHAR(12) & No & IN ('programado', 'en\_curso', 'completado', 'abortado', 'cancelado') & Estado del vuelo \\
+tipo\_operacion & VARCHAR(10) & No & IN ('manual', 'automatico') & Vuelo pilotado o por plan de vuelo \\
+distancia\_real\_km & NUMERIC(6,2) & Sí & $> 0$ & Distancia realmente recorrida \\
+\end{dtab}
+
+\dict{paquete}
+\begin{dtab}
+id\_paquete & SERIAL & No & PK & Identificador del paquete \\
+codigo\_tracking & CHAR(12) & No & UNIQUE & Código de seguimiento \\
+id\_cliente & INTEGER & No & FK $\rightarrow$ cliente & Cliente remitente \\
+id\_vuelo & INTEGER & Sí & FK $\rightarrow$ vuelo & Vuelo que lo transporta \\
+ubigeo\_destino & CHAR(6) & No & FK $\rightarrow$ distrito & Distrito de entrega \\
+peso\_kg & NUMERIC(5,2) & No & $> 0$ & Peso (kg) \\
+largo\_cm & NUMERIC(5,1) & No & $> 0$ & Largo (cm) \\
+ancho\_cm & NUMERIC(5,1) & No & $> 0$ & Ancho (cm) \\
+alto\_cm & NUMERIC(5,1) & No & $> 0$ & Alto (cm) \\
+prioridad & VARCHAR(10) & No & IN ('estandar', 'express') & Nivel de servicio \\
+es\_fragil & BOOLEAN & No & DEFAULT FALSE & Contenido frágil \\
+destinatario\_nombre & VARCHAR(100) & No & & Nombre del destinatario \\
+destinatario\_telefono & VARCHAR(15) & No & & Teléfono del destinatario \\
+direccion\_destino & VARCHAR(150) & No & & Dirección de entrega \\
+lat\_destino & NUMERIC(9,6) & Sí & $[-90,90]$ & Latitud de entrega \\
+lon\_destino & NUMERIC(9,6) & Sí & $[-180,180]$ & Longitud de entrega \\
+estado & VARCHAR(12) & No & IN ('registrado', 'asignado', 'en\_ruta', 'entregado', 'fallido', 'devuelto') & Estado del envío \\
+fecha\_registro & TIMESTAMP & No & DEFAULT now() & Fecha de registro \\
+fecha\_entrega & TIMESTAMP & Sí & $\geq$ fecha\_registro & Fecha y hora de entrega \\
+costo\_envio & NUMERIC(8,2) & No & $\geq 0$ & Costo del envío (S/) \\
+\end{dtab}
+
+\dict{telemetria\_bateria}
+\begin{dtab}
+id\_vuelo & INTEGER & No & PK; FK $\rightarrow$ vuelo & Vuelo de la lectura (propietaria) \\
+marca\_tiempo & TIMESTAMP(3) & No & PK & Instante de la lectura (clave parcial) \\
+voltaje\_v & NUMERIC(5,2) & No & $> 0$ & Voltaje medido (V) \\
+corriente\_a & NUMERIC(6,2) & No & & Corriente (A); negativa en regeneración \\
+temperatura\_c & NUMERIC(5,2) & No & $[-20,90]$ & Temperatura de la batería (°C) \\
+carga\_pct & NUMERIC(5,2) & No & $[0,100]$ & Estado de carga (SoC) \\
+\end{dtab}
+}
+
+
+
+% ================================================================ HITO 2
+\input{hito2_secciones}
+
+\end{document}

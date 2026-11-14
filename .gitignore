@@ -1,0 +1,13 @@
+# entorno y datos locales (los datos se regeneran con gen/construir_bases.sh)
+.venv/
+.env
+dumps/
+*.csv
+__pycache__/
+.DS_Store
+# LaTeX
+informe/*.aux
+informe/*.log
+informe/*.out
+informe/*.toc
+informe/*.synctex.gz

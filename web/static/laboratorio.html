@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyNest · Laboratorio de consultas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/estilo.css">
+</head>
+<body>
+<header class="cabecera" id="cabecera"></header>
+<main>
+  <section class="heroe" aria-label="Laboratorio">
+    <div class="contenedor heroe-titulo" style="flex-direction: column; align-items: flex-start; gap: 14px">
+      <span class="sobre">Optimización y experimentación · sección 5 del informe</span>
+      <h1>Laboratorio de consultas</h1>
+      <p>Ejecuta las 5 consultas intermedias en la base elegida, sin índices o con cada plan de índices, y mira cuánto tardan y qué plan de ejecución eligió PostgreSQL.</p>
+    </div>
+  </section>
+
+  <div class="contenedor seccion" style="padding-top: 40px">
+    <div class="fila" style="align-items: flex-start">
+      <nav class="consultas-lista" id="lista" aria-label="Consultas"></nav>
+
+      <div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+        <section class="tarjeta" style="flex: none" aria-label="Consulta seleccionada">
+          <div class="chico texto-gris" id="q-id"></div>
+          <h3 style="font-size: 26px; font-weight: 400; margin-top: 4px" id="q-titulo"></h3>
+          <p style="margin: 10px 0 0 0; color: #3A3A3C; line-height: 1.5" id="q-desc"></p>
+          <details style="margin-top: 16px">
+            <summary style="cursor: pointer; font-size: 14px; color: #1A6FD9">Ver el SQL de la consulta</summary>
+            <pre class="codigo" style="margin-top: 12px" id="q-sql"></pre>
+          </details>
+        </section>
+
+        <section class="tarjeta-borde" style="flex: none" aria-label="Condición del experimento">
+          <h3 style="margin-bottom: 16px">Condición</h3>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+            <div class="segmentado" role="group" aria-label="Índices" id="condiciones">
+              <button type="button" data-c="sin" class="activo">Sin índices</button>
+              <button type="button" data-c="A">Plan A</button>
+              <button type="button" data-c="B">Plan B</button>
+            </div>
+            <label class="interruptor"><input type="checkbox" id="rpc"> random_page_cost = 1.1 (SSD)</label>
+          </div>
+          <p class="chico texto-gris" style="margin: 14px 0 0 0; line-height: 1.5" id="plan-desc"></p>
+          <div id="plan-sql"></div>
+          <div class="acciones">
+            <button type="button" class="boton" id="ejecutar">Ejecutar consulta</button>
+            <button type="button" class="boton boton-borde" id="comparar">Comparar las tres condiciones</button>
+          </div>
+          <p class="chico texto-gris" style="margin: 12px 0 0 0">Al cambiar de plan se crean o borran índices en la base elegida. En la base de 1 millón eso puede tardar unos segundos.</p>
+        </section>
+
+        <div id="estado"></div>
+
+        <section class="tarjeta-oscura oculto" style="flex: none" id="comparacion" aria-label="Comparación">
+          <h3>Comparación</h3>
+          <div class="comparacion" id="comp-barras"></div>
+          <p class="chico" style="color: #A1A1A6; margin: 0">Mediana de 3 corridas por condición, tras una corrida de calentamiento.</p>
+        </section>
+
+        <section class="tarjeta-borde oculto" style="flex: none" id="resultado" aria-label="Resultado">
+          <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+            <div>
+              <div class="chico texto-gris">Tiempo de ejecución (mediana de 3 corridas)</div>
+              <div class="num liviano" style="font-size: 56px" id="r-ms"></div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end">
+              <span class="chico texto-gris">Índices que usó el plan</span>
+              <div class="chips" id="r-indices"></div>
+            </div>
+          </div>
+          <div class="pestanas" style="margin-top: 20px" role="tablist">
+            <button type="button" class="activo" data-p="tabla" role="tab">Resultado</button>
+            <button type="button" data-p="plan" role="tab">Plan de ejecución</button>
+          </div>
+          <div id="p-tabla" style="margin-top: 16px">
+            <p class="chico texto-gris" id="r-filas"></p>
+            <div class="tabla-caja" style="max-height: 480px; overflow-y: auto"><table><thead id="r-cabeza"></thead><tbody id="r-cuerpo"></tbody></table></div>
+          </div>
+          <div id="p-plan" class="oculto" style="margin-top: 16px"><pre class="codigo plan" id="r-plan"></pre></div>
+        </section>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="pie"><div class="contenedor">SkyNest · Proyecto Final CS2041 Base de Datos I · UTEC 2026-2 · Grupo 3</div></footer>
+<script src="/static/js/comun.js"></script>
+<script src="/static/js/laboratorio.js"></script>
+</body>
+</html>

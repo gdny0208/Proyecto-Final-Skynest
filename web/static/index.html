@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyNest · Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/estilo.css">
+</head>
+<body>
+<header class="cabecera" id="cabecera"></header>
+<main>
+  <section class="heroe" aria-label="Resumen del mes">
+    <div class="contenedor">
+      <div style="flex: 999 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+          <span class="sobre" id="h-sobre">Cargando…</span>
+          <label for="mes" class="oculto">Mes</label>
+          <select id="mes" class="pildora" style="background: transparent; color: #FFF; border-color: #48484A" aria-label="Mes"></select>
+        </div>
+        <h1 class="num" id="h-entregados">–</h1>
+        <p class="subtitulo">paquetes entregados por el aire.</p>
+        <p id="h-detalle"></p>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px">
+          <a class="boton" href="/despacho">Programar vuelo</a>
+          <a class="boton boton-claro" href="/rastrear">Rastrear un paquete</a>
+        </div>
+      </div>
+      <div style="flex: 0 0 260px; display: flex; flex-direction: column; align-items: center; gap: 10px">
+        <div class="mapa" id="mapa" style="transform: scale(0.62); transform-origin: top center; margin-bottom: -198px" role="img" aria-label="Mapa de los nests de SkyNest en Lima y Callao"></div>
+        <span class="chico" style="color: #A1A1A6" id="h-nests"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="franja" aria-label="Indicadores">
+    <div class="contenedor indicadores" id="indicadores"></div>
+  </section>
+
+  <div class="contenedor seccion">
+    <h2 class="titulo-seccion">La operación del mes</h2>
+    <div class="fila">
+      <section class="tarjeta" aria-label="Vuelos por semana">
+        <h3>Vuelos por semana</h3>
+        <p class="texto-gris chico" style="margin: 6px 0 0 0" id="t-vuelos"></p>
+        <div class="barras" id="semanas"></div>
+      </section>
+      <section class="tarjeta" aria-label="Distritos con más entregas" style="display: flex; flex-direction: column">
+        <h3 style="margin-bottom: 18px">Distritos con más entregas</h3>
+        <div class="lista-filas" id="distritos"></div>
+      </section>
+    </div>
+    <div class="fila">
+      <section class="tarjeta-borde" aria-label="Últimos vuelos">
+        <div class="cabeza-tarjeta"><h3>Últimos vuelos del mes</h3><a href="/despacho" class="chico" style="text-decoration: none">Ir a despacho ›</a></div>
+        <div class="tabla-caja">
+          <table>
+            <thead><tr><th>Vuelo</th><th>Ruta</th><th>Modelo</th><th>Despegue</th><th>Duración</th><th>Estado</th></tr></thead>
+            <tbody id="vuelos"></tbody>
+          </table>
+        </div>
+      </section>
+      <section class="tarjeta-oscura" aria-label="Requiere atención">
+        <h3>Requiere atención</h3>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFB340" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3l9 16H3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></svg>
+          <div><div class="num" style="font-weight: 300; font-size: 32px" id="a-alertas">–</div><div class="chico" style="color: #A1A1A6">alertas de batería sobre 60 °C</div></div>
+        </div>
+        <div class="separador"></div>
+        <div class="linea"><span style="color: #A1A1A6">Licencias por vencer (30 días)</span><span class="num" id="a-licencias">–</span></div>
+        <div class="linea"><span style="color: #A1A1A6">Vuelos programados</span><span class="num" id="a-programados">–</span></div>
+        <div class="linea"><span style="color: #A1A1A6">Drones disponibles</span><span class="num" id="a-drones">–</span></div>
+        <a href="/laboratorio" style="margin-top: auto; font-size: 14px; color: #6CB4FF; text-decoration: none">Ver la consulta de alertas (C3) ›</a>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="pie"><div class="contenedor">SkyNest · Proyecto Final CS2041 Base de Datos I · UTEC 2026-2 · Grupo 3</div></footer>
+<script src="/static/js/comun.js"></script>
+<script src="/static/js/panel.js"></script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkyNest · Despacho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/estilo.css">
+</head>
+<body>
+<header class="cabecera" id="cabecera"></header>
+<main>
+  <section class="heroe" aria-label="Despacho">
+    <div class="contenedor heroe-titulo" style="flex-direction: column; align-items: flex-start; gap: 14px">
+      <span class="sobre">Procedimientos almacenados y triggers · secciones 4.5 y 4.6 del informe</span>
+      <h1>Despacho</h1>
+      <p>Registra un paquete, programa un vuelo y síguelo hasta la entrega. La base de datos decide y valida: si algo rompe una regla, el trigger lo rechaza y aquí ves su mensaje.</p>
+    </div>
+  </section>
+
+  <div class="contenedor seccion">
+    <div class="pasos">
+      <!-- Paso 1 -->
+      <section class="tarjeta paso" style="flex: none" aria-label="Registrar paquete">
+        <h3><span class="n">1</span>Registrar paquete</h3>
+        <form class="formulario" id="f-paquete">
+          <label class="ancho">Cliente
+            <input id="cliente-q" placeholder="Busca por nombre, empresa o correo" autocomplete="off">
+            <div class="resultado-busqueda" id="cliente-res"></div>
+          </label>
+          <input type="hidden" id="id-cliente">
+          <label class="ancho">Distrito de destino<select id="distrito" required></select></label>
+          <label>Peso (kg)<input id="peso" type="number" step="0.1" min="0.1" value="1.2" required></label>
+          <label>Prioridad<select id="prioridad"><option value="estandar">Estándar</option><option value="express">Express</option></select></label>
+          <label>Destinatario<input id="destinatario" value="Lucía Ramos" required></label>
+          <label>Teléfono<input id="telefono" value="987654321" required></label>
+          <label class="ancho">Dirección<input id="direccion" value="Av. José Larco 812" required></label>
+          <div class="ancho acciones" style="margin-top: 4px">
+            <button class="boton" type="submit">Registrar paquete</button>
+            <span class="chico texto-gris" style="align-self: center">CALL sp_registrar_paquete(…)</span>
+          </div>
+        </form>
+        <div id="m-paquete" style="margin-top: 14px"></div>
+      </section>
+
+      <!-- Paso 2 -->
+      <section class="tarjeta paso" style="flex: none" aria-label="Programar vuelo">
+        <h3><span class="n">2</span>Programar vuelo</h3>
+        <form class="formulario" id="f-vuelo">
+          <label class="ancho">Ruta hacia el distrito elegido<select id="ruta" required></select></label>
+          <label>Fecha y hora<input id="fecha" type="datetime-local" required></label>
+          <label>Operación<select id="tipo"><option value="automatico">Automática</option><option value="manual">Manual</option></select></label>
+          <p class="ancho chico texto-gris" style="margin: 0; line-height: 1.5">El procedimiento elige solo un drone disponible del nest, una batería operativa, un operador con licencia y autorización y, si el distrito es restringido, el permiso vigente.</p>
+          <div class="ancho acciones" style="margin-top: 4px">
+            <button class="boton" type="submit">Programar vuelo</button>
+            <span class="chico texto-gris" style="align-self: center">CALL sp_programar_vuelo(…)</span>
+          </div>
+        </form>
+        <div id="m-vuelo" style="margin-top: 14px"></div>
+      </section>
+    </div>
+
+    <!-- Paso 3 -->
+    <section class="tarjeta-borde paso oculto" style="flex: none" id="panel-vuelo" aria-label="Vuelo">
+      <div class="cabeza-tarjeta" style="flex-wrap: wrap">
+        <h3 style="margin: 0"><span class="n">3</span>Vuelo <span class="num" id="v-id"></span></h3>
+        <div id="v-estado" style="font-size: 16px"></div>
+      </div>
+      <div class="ficha" id="v-ficha" style="margin-top: 8px"></div>
+      <h4 style="margin: 24px 0 8px 0; font-weight: 500">Paquetes a bordo</h4>
+      <div class="tabla-caja"><table><thead><tr><th>Código</th><th>Peso</th><th>Estado</th><th>Entregado</th></tr></thead><tbody id="v-paquetes"></tbody></table></div>
+      <div class="acciones">
+        <button type="button" class="boton boton-chico" data-a="asignar">Asignar el paquete del paso 1</button>
+        <button type="button" class="boton boton-chico" data-a="despegar">Despegar</button>
+        <button type="button" class="boton boton-borde boton-chico" data-a="lectura">Enviar lectura de telemetría</button>
+        <button type="button" class="boton boton-chico" data-a="cerrar">Aterrizar</button>
+        <button type="button" class="boton boton-borde boton-chico" data-a="cancelar">Cancelar vuelo</button>
+      </div>
+      <div class="separador" style="background: #ECECEE; margin: 24px 0 16px 0"></div>
+      <h4 style="margin: 0 0 4px 0; font-weight: 500">Probar las reglas</h4>
+      <p class="chico texto-gris" style="margin: 0 0 12px 0">Cada botón intenta una operación inválida para que la veas rechazada por la base. Las de paquetes funcionan mientras el vuelo está programado (antes de despegar).</p>
+      <div class="acciones" style="margin-top: 0">
+        <button type="button" class="boton boton-borde boton-chico" data-a="sobrepeso">Paquete con sobrepeso (R15)</button>
+        <button type="button" class="boton boton-borde boton-chico" data-a="otro-distrito">Paquete a otro distrito (R14)</button>
+        <button type="button" class="boton boton-borde boton-chico" data-a="despegar">Despegar dos veces (transición)</button>
+      </div>
+      <div id="m-acciones" style="margin-top: 16px"></div>
+    </section>
+
+    <section class="tarjeta" style="flex: none" aria-label="Registro de operaciones">
+      <h3 style="margin-bottom: 12px">Registro de operaciones</h3>
+      <div id="registro" class="chico" style="display: flex; flex-direction: column; gap: 8px"><span class="texto-gris" id="registro-vacio">Todavía no hay operaciones.</span></div>
+    </section>
+  </div>
+</main>
+<footer class="pie"><div class="contenedor">SkyNest · Proyecto Final CS2041 Base de Datos I · UTEC 2026-2 · Grupo 3</div></footer>
+<script src="/static/js/comun.js"></script>
+<script src="/static/js/despacho.js"></script>
+</body>
+</html>
