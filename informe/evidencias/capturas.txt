@@ -1,0 +1,15 @@
+01_panel: entregados='64 527' (5.6s)
+02_rastrear: codigo='SKY000000001' (1.7s)
+  paso 1: Paquete
+SKY000015084
+registrado. Estado:
+registrado
+  paso 2: Vuelo
+10002
+programado.
+  R15  : La base rechazó la operación. R15: el vuelo 10002 llevaría 10.00 kg y la carga útil del modelo es 5.00 kg | rojo
+  asig : sp_asignar_paquete ejecutado. Estados actualizados por los triggers.
+03_despacho (2.1s)
+  ejecutar C3/B: 6,88 ms indices='ix_c3b_telemetria_alertas\npk_bateria\npk_vuelo' aviso=''
+  comparar: Sin índices 620,9 ms Plan A 9,81 ms · 63,3× Plan B 7,73 ms · 80,3×
+04/05_laboratorio (27.2s)

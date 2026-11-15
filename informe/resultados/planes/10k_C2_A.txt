@@ -1,0 +1,76 @@
+Sort  (cost=820.54..820.66 rows=46 width=100) (actual time=0.511..0.513 rows=32 loops=1)
+  Sort Key: (round(avg(((((array_agg(t.carga_pct ORDER BY t.marca_tiempo))[1]) - ((array_agg(t.carga_pct ORDER BY t.marca_tiempo DESC))[1])) / vs.distancia_real_km)), 2)) DESC
+  Sort Method: quicksort  Memory: 29kB
+  Buffers: shared hit=249
+  CTE vuelos_sel
+    ->  Nested Loop  (cost=1.66..196.85 rows=43 width=18) (actual time=0.007..0.063 rows=48 loops=1)
+          Buffers: shared hit=90
+          InitPlan 1 (returns $0)
+            ->  Seq Scan on estacion_nest  (cost=0.00..1.38 rows=1 width=4) (actual time=0.001..0.003 rows=1 loops=1)
+                  Filter: ((codigo)::text = 'NST-MIR-01'::text)
+                  Rows Removed by Filter: 29
+                  Buffers: shared hit=1
+          ->  Seq Scan on ruta_vuelo r_1  (cost=0.00..14.50 rows=20 width=4) (actual time=0.004..0.031 rows=20 loops=1)
+                Filter: (id_nest_origen = $0)
+                Rows Removed by Filter: 580
+                Buffers: shared hit=8
+          ->  Index Scan using ix_c2a_vuelo_ruta_despegue on vuelo v  (cost=0.29..9.03 rows=2 width=18) (actual time=0.001..0.001 rows=2 loops=20)
+                Index Cond: ((id_ruta = r_1.id_ruta) AND (despegue >= '2026-01-01 00:00:00'::timestamp without time zone) AND (despegue < '2026-04-01 00:00:00'::timestamp without time zone))
+                Filter: ((estado)::text = 'completado'::text)
+                Buffers: shared hit=82
+  ->  GroupAggregate  (cost=620.59..622.43 rows=46 width=100) (actual time=0.468..0.504 rows=32 loops=1)
+        Group Key: m.fabricante, m.nombre, r.codigo
+        Buffers: shared hit=249
+        ->  Sort  (cost=620.59..620.70 rows=46 width=106) (actual time=0.463..0.465 rows=48 loops=1)
+              Sort Key: m.fabricante, m.nombre, r.codigo
+              Sort Method: quicksort  Memory: 30kB
+              Buffers: shared hit=249
+              ->  Hash Join  (cost=603.61..619.32 rows=46 width=106) (actual time=0.359..0.412 rows=48 loops=1)
+                    Hash Cond: (r.id_ruta = vs.id_ruta)
+                    Buffers: shared hit=249
+                    ->  Seq Scan on ruta_vuelo r  (cost=0.00..13.00 rows=600 width=17) (actual time=0.002..0.020 rows=600 loops=1)
+                          Buffers: shared hit=7
+                    ->  Hash  (cost=603.03..603.03 rows=46 width=97) (actual time=0.355..0.356 rows=48 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 12kB
+                          Buffers: shared hit=242
+                          ->  Hash Join  (cost=594.32..603.03 rows=46 width=97) (actual time=0.224..0.350 rows=48 loops=1)
+                                Hash Cond: (t.id_vuelo = vs.id_vuelo)
+                                Buffers: shared hit=242
+                                ->  GroupAggregate  (cost=582.48..587.80 rows=213 width=68) (actual time=0.095..0.212 rows=48 loops=1)
+                                      Group Key: t.id_vuelo
+                                      Buffers: shared hit=147
+                                      ->  Sort  (cost=582.48..583.01 rows=213 width=18) (actual time=0.089..0.095 rows=239 loops=1)
+                                            Sort Key: t.id_vuelo
+                                            Sort Method: quicksort  Memory: 43kB
+                                            Buffers: shared hit=147
+                                            ->  Nested Loop  (cost=0.29..574.24 rows=213 width=18) (actual time=0.002..0.067 rows=239 loops=1)
+                                                  Buffers: shared hit=147
+                                                  ->  CTE Scan on vuelos_sel vs_1  (cost=0.00..0.86 rows=43 width=4) (actual time=0.000..0.002 rows=48 loops=1)
+                                                  ->  Index Scan using pk_telemetria_bateria on telemetria_bateria t  (cost=0.29..13.28 rows=5 width=18) (actual time=0.001..0.001 rows=5 loops=48)
+                                                        Index Cond: (id_vuelo = vs_1.id_vuelo)
+                                                        Buffers: shared hit=147
+                                ->  Hash  (cost=11.30..11.30 rows=43 width=37) (actual time=0.128..0.129 rows=48 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 12kB
+                                      Buffers: shared hit=95
+                                      ->  Hash Join  (cost=2.58..11.30 rows=43 width=37) (actual time=0.085..0.122 rows=48 loops=1)
+                                            Hash Cond: (dr.id_modelo = m.id_modelo)
+                                            Buffers: shared hit=95
+                                            ->  Hash Join  (cost=1.40..9.95 rows=43 width=26) (actual time=0.081..0.113 rows=48 loops=1)
+                                                  Hash Cond: (dr.id_drone = vs.id_drone)
+                                                  Buffers: shared hit=94
+                                                  ->  Seq Scan on drone dr  (cost=0.00..7.00 rows=300 width=8) (actual time=0.002..0.014 rows=300 loops=1)
+                                                        Buffers: shared hit=4
+                                                  ->  Hash  (cost=0.86..0.86 rows=43 width=26) (actual time=0.078..0.078 rows=48 loops=1)
+                                                        Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                                        Buffers: shared hit=90
+                                                        ->  CTE Scan on vuelos_sel vs  (cost=0.00..0.86 rows=43 width=26) (actual time=0.007..0.073 rows=48 loops=1)
+                                                              Buffers: shared hit=90
+                                            ->  Hash  (cost=1.08..1.08 rows=8 width=19) (actual time=0.003..0.003 rows=8 loops=1)
+                                                  Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                                  Buffers: shared hit=1
+                                                  ->  Seq Scan on modelo_drone m  (cost=0.00..1.08 rows=8 width=19) (actual time=0.001..0.002 rows=8 loops=1)
+                                                        Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=21
+Planning Time: 0.339 ms
+Execution Time: 0.543 ms

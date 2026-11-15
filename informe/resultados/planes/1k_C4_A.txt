@@ -1,0 +1,50 @@
+Sort  (cost=36.12..36.21 rows=36 width=161) (actual time=0.104..0.106 rows=38 loops=1)
+  Sort Key: (round(((sum((EXTRACT(epoch FROM (v.aterrizaje - v.despegue)) / '3600'::numeric))) - avg((sum((EXTRACT(epoch FROM (v.aterrizaje - v.despegue)) / '3600'::numeric)))) OVER (?)), 2)), v.id_drone
+  Sort Method: quicksort  Memory: 30kB
+  Buffers: shared hit=23
+  ->  WindowAgg  (cost=34.02..35.19 rows=36 width=161) (actual time=0.076..0.095 rows=38 loops=1)
+        Buffers: shared hit=23
+        ->  Sort  (cost=34.02..34.11 rows=36 width=80) (actual time=0.074..0.075 rows=38 loops=1)
+              Sort Key: d.id_modelo
+              Sort Method: quicksort  Memory: 30kB
+              Buffers: shared hit=23
+              ->  Hash Join  (cost=25.04..33.09 rows=36 width=80) (actual time=0.039..0.070 rows=38 loops=1)
+                    Hash Cond: (d.id_nest_base = n.id_nest)
+                    Buffers: shared hit=23
+                    ->  Hash Join  (cost=23.37..31.30 rows=36 width=67) (actual time=0.033..0.061 rows=38 loops=1)
+                          Hash Cond: (d.id_modelo = m.id_modelo)
+                          Buffers: shared hit=22
+                          ->  Hash Join  (cost=22.19..29.99 rows=36 width=52) (actual time=0.031..0.055 rows=38 loops=1)
+                                Hash Cond: (d.id_drone = v.id_drone)
+                                Buffers: shared hit=21
+                                ->  Seq Scan on drone d  (cost=0.00..7.00 rows=300 width=12) (actual time=0.001..0.009 rows=300 loops=1)
+                                      Buffers: shared hit=4
+                                ->  Hash  (cost=21.74..21.74 rows=36 width=44) (actual time=0.029..0.029 rows=38 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                      Buffers: shared hit=17
+                                      ->  HashAggregate  (cost=20.93..21.38 rows=36 width=44) (actual time=0.022..0.026 rows=38 loops=1)
+                                            Group Key: v.id_drone
+                                            Batches: 1  Memory Usage: 48kB
+                                            Buffers: shared hit=17
+                                            ->  Bitmap Heap Scan on vuelo v  (cost=4.67..20.36 rows=38 width=20) (actual time=0.003..0.009 rows=40 loops=1)
+                                                  Recheck Cond: ((despegue >= '2026-09-01 00:00:00'::timestamp without time zone) AND (despegue < '2026-10-01 00:00:00'::timestamp without time zone))
+                                                  Filter: ((estado)::text = ANY ('{completado,abortado}'::text[]))
+                                                  Heap Blocks: exact=15
+                                                  Buffers: shared hit=17
+                                                  ->  Bitmap Index Scan on ix_c4a_vuelo_despegue  (cost=0.00..4.67 rows=39 width=0) (actual time=0.002..0.002 rows=40 loops=1)
+                                                        Index Cond: ((despegue >= '2026-09-01 00:00:00'::timestamp without time zone) AND (despegue < '2026-10-01 00:00:00'::timestamp without time zone))
+                                                        Buffers: shared hit=2
+                          ->  Hash  (cost=1.08..1.08 rows=8 width=19) (actual time=0.002..0.002 rows=8 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                Buffers: shared hit=1
+                                ->  Seq Scan on modelo_drone m  (cost=0.00..1.08 rows=8 width=19) (actual time=0.001..0.001 rows=8 loops=1)
+                                      Buffers: shared hit=1
+                    ->  Hash  (cost=1.30..1.30 rows=30 width=21) (actual time=0.005..0.005 rows=30 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                          Buffers: shared hit=1
+                          ->  Seq Scan on estacion_nest n  (cost=0.00..1.30 rows=30 width=21) (actual time=0.001..0.002 rows=30 loops=1)
+                                Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=8
+Planning Time: 0.090 ms
+Execution Time: 0.121 ms

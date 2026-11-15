@@ -1,0 +1,17 @@
+\begin{table}[H]
+\centering
+\small
+\caption{Mejora respecto de la ejecución sin índices, escala de 1 000 000 vuelos}
+\label{tab:mejora}
+\begin{tabular}{lrrrr}
+\toprule
+Consulta & Sin índices (ms) & Plan A & Plan B & Plan B + rpc \\
+\midrule
+C1 & 110 & 1,3$\times$ & 4,0$\times$ & 4,0$\times$ \\
+C2 & 46,37 & 2,2$\times$ & 1,2$\times$ & 1,2$\times$ \\
+C3 & 127 & 5,8$\times$ & 44,2$\times$ & 52,9$\times$ \\
+C4 & 43,35 & 2,9$\times$ & 1,0$\times$ & 1,1$\times$ \\
+C5 & 113 & 2,2$\times$ & 2,7$\times$ & 5,7$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}

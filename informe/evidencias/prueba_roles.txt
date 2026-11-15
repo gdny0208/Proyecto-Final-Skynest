@@ -1,0 +1,69 @@
+BEGIN
+--- rol_analista: SÍ lee las vistas de reportes
+SAVEPOINT
+SET
+ filas_v_entregas 
+------------------
+              851
+
+ROLLBACK
+--- rol_analista: NO lee las tablas directamente
+SAVEPOINT
+SET
+psql:sql/06_roles_prueba.sql:23: ERROR:  permission denied for table paquete
+ROLLBACK
+--- rol_cliente: SÍ rastrea un paquete por su código
+SAVEPOINT
+SET
+ codigo_tracking | estado_paquete | distrito_destino 
+-----------------+----------------+------------------
+ SKY000000004    | entregado      | Lince
+
+ROLLBACK
+--- rol_cliente: NO puede listar todos los paquetes
+SAVEPOINT
+SET
+psql:sql/06_roles_prueba.sql:32: ERROR:  permission denied for view v_seguimiento_paquete
+ROLLBACK
+--- rol_operador: SÍ despega un vuelo programado con el procedimiento
+SAVEPOINT
+SET
+CALL
+RESET
+ id_vuelo |  estado  
+----------+----------
+       61 | en_curso
+
+ROLLBACK
+--- rol_operador: NO puede modificar el vuelo directamente
+SAVEPOINT
+SET
+psql:sql/06_roles_prueba.sql:43: ERROR:  permission denied for table vuelo
+ROLLBACK
+--- rol_tecnico: SÍ actualiza la salud de una batería
+SAVEPOINT
+SET
+UPDATE 1
+ROLLBACK
+--- rol_tecnico: NO puede cambiar la química de la batería
+SAVEPOINT
+SET
+psql:sql/06_roles_prueba.sql:52: ERROR:  permission denied for table bateria
+ROLLBACK
+--- rol_telemetria: SÍ inserta una lectura (dentro de un vuelo)
+SAVEPOINT
+SET
+INSERT 0 1
+ROLLBACK
+--- rol_telemetria: NO puede borrar lecturas
+SAVEPOINT
+SET
+psql:sql/06_roles_prueba.sql:63: ERROR:  permission denied for table telemetria_bateria
+ROLLBACK
+--- rol_despachador: NO puede borrar vuelos
+SAVEPOINT
+SET
+psql:sql/06_roles_prueba.sql:68: ERROR:  permission denied for table vuelo
+ROLLBACK
+ROLLBACK
+=== Fin: transacción deshecha ===

@@ -1,0 +1,40 @@
+Sort  (cost=49339.17..49341.42 rows=900 width=111) (actual time=8.514..8.553 rows=466 loops=1)
+  Sort Key: (max(t.temperatura_c)) DESC
+  Sort Method: quicksort  Memory: 90kB
+  Buffers: shared hit=16046
+  ->  GroupAggregate  (cost=49033.33..49295.01 rows=900 width=111) (actual time=7.600..8.429 rows=466 loops=1)
+        Group Key: b.id_bateria
+        Buffers: shared hit=16046
+        ->  Merge Join  (cost=49033.33..49259.67 rows=1377 width=45) (actual time=7.587..7.874 rows=787 loops=1)
+              Merge Cond: (v.id_bateria = b.id_bateria)
+              Buffers: shared hit=16046
+              ->  Gather Merge  (cost=49033.05..49193.43 rows=1377 width=18) (actual time=7.582..7.682 rows=787 loops=1)
+                    Workers Planned: 2
+                    Workers Launched: 2
+                    Buffers: shared hit=16032
+                    ->  Sort  (cost=48033.03..48034.46 rows=574 width=18) (actual time=6.055..6.060 rows=262 loops=3)
+                          Sort Key: v.id_bateria
+                          Sort Method: quicksort  Memory: 50kB
+                          Buffers: shared hit=16032
+                          Worker 0:  Sort Method: quicksort  Memory: 43kB
+                          Worker 1:  Sort Method: quicksort  Memory: 43kB
+                          ->  Nested Loop  (cost=552.67..48006.73 rows=574 width=18) (actual time=1.231..6.012 rows=262 loops=3)
+                                Buffers: shared hit=16016
+                                ->  Parallel Bitmap Heap Scan on telemetria_bateria t  (cost=552.25..43725.98 rows=574 width=10) (actual time=1.220..5.445 rows=262 loops=3)
+                                      Recheck Cond: (temperatura_c > '60'::numeric)
+                                      Filter: ((marca_tiempo >= '2026-10-01 00:00:00'::timestamp without time zone) AND (marca_tiempo < '2026-11-01 00:00:00'::timestamp without time zone))
+                                      Rows Removed by Filter: 5895
+                                      Heap Blocks: exact=7656
+                                      Buffers: shared hit=12866
+                                      ->  Bitmap Index Scan on ix_c3a_telemetria_temp  (cost=0.00..551.90 rows=29796 width=0) (actual time=1.374..1.374 rows=18472 loops=1)
+                                            Index Cond: (temperatura_c > '60'::numeric)
+                                            Buffers: shared hit=53
+                                ->  Index Scan using pk_vuelo on vuelo v  (cost=0.42..7.46 rows=1 width=12) (actual time=0.002..0.002 rows=1 loops=787)
+                                      Index Cond: (id_vuelo = t.id_vuelo)
+                                      Buffers: shared hit=3150
+              ->  Index Scan using pk_bateria on bateria b  (cost=0.28..46.77 rows=900 width=31) (actual time=0.004..0.061 rows=899 loops=1)
+                    Buffers: shared hit=14
+Planning:
+  Buffers: shared hit=52
+Planning Time: 0.190 ms
+Execution Time: 8.582 ms

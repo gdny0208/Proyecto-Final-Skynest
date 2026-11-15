@@ -1,0 +1,48 @@
+Sort  (cost=975.26..977.02 rows=706 width=109) (actual time=2.539..2.544 rows=215 loops=1)
+  Sort Key: (round(((100.0 * (count(*) FILTER (WHERE ((p.estado)::text = 'entregado'::text)))::numeric) / (count(*))::numeric), 1)), (count(*)) DESC
+  Sort Method: quicksort  Memory: 55kB
+  Buffers: shared hit=539
+  ->  HashAggregate  (cost=922.44..941.85 rows=706 width=109) (actual time=2.377..2.461 rows=215 loops=1)
+        Group Key: n.nombre, d.nombre
+        Batches: 1  Memory Usage: 169kB
+        Buffers: shared hit=539
+        ->  Hash Join  (cost=322.15..906.55 rows=706 width=54) (actual time=0.610..2.153 rows=696 loops=1)
+              Hash Cond: (r.ubigeo_destino = d.ubigeo)
+              Buffers: shared hit=539
+              ->  Hash Join  (cost=320.03..902.42 rows=706 width=49) (actual time=0.601..2.082 rows=696 loops=1)
+                    Hash Cond: (r.id_nest_origen = n.id_nest)
+                    Buffers: shared hit=538
+                    ->  Hash Join  (cost=318.35..898.62 rows=706 width=36) (actual time=0.596..2.026 rows=696 loops=1)
+                          Hash Cond: (v.id_ruta = r.id_ruta)
+                          Buffers: shared hit=537
+                          ->  Hash Join  (cost=297.85..876.26 rows=706 width=29) (actual time=0.530..1.899 rows=696 loops=1)
+                                Hash Cond: (p.id_vuelo = v.id_vuelo)
+                                Buffers: shared hit=530
+                                ->  Seq Scan on paquete p  (cost=0.00..538.81 rows=15081 width=21) (actual time=0.001..0.447 rows=15081 loops=1)
+                                      Buffers: shared hit=388
+                                ->  Hash  (cost=292.00..292.00 rows=468 width=16) (actual time=0.525..0.525 rows=473 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 31kB
+                                      Buffers: shared hit=142
+                                      ->  Seq Scan on vuelo v  (cost=0.00..292.00 rows=468 width=16) (actual time=0.002..0.501 rows=473 loops=1)
+                                            Filter: ((despegue >= '2026-03-01 00:00:00'::timestamp without time zone) AND (despegue < '2026-04-01 00:00:00'::timestamp without time zone))
+                                            Rows Removed by Filter: 9527
+                                            Buffers: shared hit=142
+                          ->  Hash  (cost=13.00..13.00 rows=600 width=15) (actual time=0.066..0.066 rows=600 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 36kB
+                                Buffers: shared hit=7
+                                ->  Seq Scan on ruta_vuelo r  (cost=0.00..13.00 rows=600 width=15) (actual time=0.001..0.028 rows=600 loops=1)
+                                      Buffers: shared hit=7
+                    ->  Hash  (cost=1.30..1.30 rows=30 width=21) (actual time=0.004..0.004 rows=30 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                          Buffers: shared hit=1
+                          ->  Seq Scan on estacion_nest n  (cost=0.00..1.30 rows=30 width=21) (actual time=0.001..0.002 rows=30 loops=1)
+                                Buffers: shared hit=1
+              ->  Hash  (cost=1.50..1.50 rows=50 width=19) (actual time=0.008..0.008 rows=50 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                    Buffers: shared hit=1
+                    ->  Seq Scan on distrito d  (cost=0.00..1.50 rows=50 width=19) (actual time=0.001..0.003 rows=50 loops=1)
+                          Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=26
+Planning Time: 0.158 ms
+Execution Time: 2.561 ms

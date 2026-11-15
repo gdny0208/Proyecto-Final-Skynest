@@ -1,0 +1,40 @@
+Sort  (cost=46.07..46.11 rows=17 width=92) (actual time=0.130..0.131 rows=12 loops=1)
+  Sort Key: (round(((100.0 * (count(*) FILTER (WHERE ((EXTRACT(epoch FROM (p.fecha_entrega - v.despegue)) / '60'::numeric) > (r.duracion_est_min)::numeric)))::numeric) / (count(*))::numeric), 1)) DESC, (count(*)) DESC
+  Sort Method: quicksort  Memory: 26kB
+  Buffers: shared hit=73
+  ->  GroupAggregate  (cost=44.57..45.72 rows=17 width=92) (actual time=0.113..0.127 rows=12 loops=1)
+        Group Key: d.nombre
+        Buffers: shared hit=73
+        ->  Sort  (cost=44.57..44.62 rows=17 width=30) (actual time=0.109..0.110 rows=18 loops=1)
+              Sort Key: d.nombre
+              Sort Method: quicksort  Memory: 26kB
+              Buffers: shared hit=73
+              ->  Hash Join  (cost=7.32..44.23 rows=17 width=30) (actual time=0.021..0.101 rows=18 loops=1)
+                    Hash Cond: (p.ubigeo_destino = d.ubigeo)
+                    Buffers: shared hit=73
+                    ->  Nested Loop  (cost=5.19..42.06 rows=17 width=25) (actual time=0.012..0.091 rows=18 loops=1)
+                          Buffers: shared hit=72
+                          ->  Hash Join  (cost=4.92..36.34 rows=17 width=27) (actual time=0.011..0.080 rows=18 loops=1)
+                                Hash Cond: (v.id_vuelo = p.id_vuelo)
+                                Buffers: shared hit=18
+                                ->  Seq Scan on vuelo v  (cost=0.00..25.00 rows=1000 width=16) (actual time=0.001..0.029 rows=1000 loops=1)
+                                      Buffers: shared hit=15
+                                ->  Hash  (cost=4.70..4.70 rows=17 width=19) (actual time=0.006..0.006 rows=18 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                      Buffers: shared hit=3
+                                      ->  Index Only Scan using ix_c5b_paquete_express_cov on paquete p  (cost=0.28..4.70 rows=17 width=19) (actual time=0.003..0.004 rows=18 loops=1)
+                                            Index Cond: ((prioridad = 'express'::text) AND (estado = 'entregado'::text) AND (fecha_entrega >= '2026-08-01 00:00:00'::timestamp without time zone) AND (fecha_entrega < '2026-09-01 00:00:00'::timestamp without time zone))
+                                            Heap Fetches: 0
+                                            Buffers: shared hit=3
+                          ->  Index Scan using pk_ruta_vuelo on ruta_vuelo r  (cost=0.28..0.34 rows=1 width=6) (actual time=0.000..0.000 rows=1 loops=18)
+                                Index Cond: (id_ruta = v.id_ruta)
+                                Buffers: shared hit=54
+                    ->  Hash  (cost=1.50..1.50 rows=50 width=19) (actual time=0.007..0.007 rows=50 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                          Buffers: shared hit=1
+                          ->  Seq Scan on distrito d  (cost=0.00..1.50 rows=50 width=19) (actual time=0.001..0.003 rows=50 loops=1)
+                                Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=22
+Planning Time: 0.143 ms
+Execution Time: 0.141 ms

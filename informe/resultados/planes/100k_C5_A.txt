@@ -1,0 +1,45 @@
+Sort  (cost=7314.18..7314.30 rows=50 width=92) (actual time=12.054..12.056 rows=34 loops=1)
+  Sort Key: (round(((100.0 * (count(*) FILTER (WHERE ((EXTRACT(epoch FROM (p.fecha_entrega - v.despegue)) / '60'::numeric) > (r.duracion_est_min)::numeric)))::numeric) / (count(*))::numeric), 1)) DESC, (count(*)) DESC
+  Sort Method: quicksort  Memory: 28kB
+  Buffers: shared hit=1924
+  ->  HashAggregate  (cost=7311.39..7312.76 rows=50 width=92) (actual time=12.031..12.047 rows=34 loops=1)
+        Group Key: d.nombre
+        Batches: 1  Memory Usage: 48kB
+        Buffers: shared hit=1924
+        ->  Hash Join  (cost=4297.41..7242.46 rows=1838 width=30) (actual time=1.449..10.978 rows=2033 loops=1)
+              Hash Cond: (p.ubigeo_destino = d.ubigeo)
+              Buffers: shared hit=1924
+              ->  Hash Join  (cost=4295.28..7235.10 rows=1838 width=25) (actual time=1.440..10.774 rows=2033 loops=1)
+                    Hash Cond: (v.id_ruta = r.id_ruta)
+                    Buffers: shared hit=1923
+                    ->  Hash Join  (cost=4274.78..7209.74 rows=1838 width=27) (actual time=1.373..10.533 rows=2033 loops=1)
+                          Hash Cond: (v.id_vuelo = p.id_vuelo)
+                          Buffers: shared hit=1916
+                          ->  Seq Scan on vuelo v  (cost=0.00..2417.00 rows=100000 width=16) (actual time=0.001..3.238 rows=100000 loops=1)
+                                Buffers: shared hit=1417
+                          ->  Hash  (cost=4251.81..4251.81 rows=1838 width=19) (actual time=1.345..1.345 rows=2033 loops=1)
+                                Buckets: 2048  Batches: 1  Memory Usage: 118kB
+                                Buffers: shared hit=499
+                                ->  Bitmap Heap Scan on paquete p  (cost=130.46..4251.81 rows=1838 width=19) (actual time=0.240..1.216 rows=2033 loops=1)
+                                      Recheck Cond: ((fecha_entrega >= '2026-08-01 00:00:00'::timestamp without time zone) AND (fecha_entrega < '2026-09-01 00:00:00'::timestamp without time zone))
+                                      Filter: (((prioridad)::text = 'express'::text) AND ((estado)::text = 'entregado'::text))
+                                      Rows Removed by Filter: 4593
+                                      Heap Blocks: exact=479
+                                      Buffers: shared hit=499
+                                      ->  Bitmap Index Scan on ix_c5a_paquete_entrega  (cost=0.00..130.00 rows=6558 width=0) (actual time=0.212..0.212 rows=6626 loops=1)
+                                            Index Cond: ((fecha_entrega >= '2026-08-01 00:00:00'::timestamp without time zone) AND (fecha_entrega < '2026-09-01 00:00:00'::timestamp without time zone))
+                                            Buffers: shared hit=20
+                    ->  Hash  (cost=13.00..13.00 rows=600 width=6) (actual time=0.065..0.065 rows=600 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 32kB
+                          Buffers: shared hit=7
+                          ->  Seq Scan on ruta_vuelo r  (cost=0.00..13.00 rows=600 width=6) (actual time=0.001..0.038 rows=600 loops=1)
+                                Buffers: shared hit=7
+              ->  Hash  (cost=1.50..1.50 rows=50 width=19) (actual time=0.008..0.008 rows=50 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                    Buffers: shared hit=1
+                    ->  Seq Scan on distrito d  (cost=0.00..1.50 rows=50 width=19) (actual time=0.002..0.004 rows=50 loops=1)
+                          Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=22
+Planning Time: 0.181 ms
+Execution Time: 12.077 ms

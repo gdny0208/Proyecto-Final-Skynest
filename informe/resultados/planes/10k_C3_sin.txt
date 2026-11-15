@@ -1,0 +1,29 @@
+Sort  (cost=1420.77..1420.81 rows=15 width=110) (actual time=2.615..2.615 rows=4 loops=1)
+  Sort Key: (max(t.temperatura_c)) DESC
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=484
+  ->  GroupAggregate  (cost=1419.99..1420.48 rows=15 width=110) (actual time=2.610..2.614 rows=4 loops=1)
+        Group Key: b.id_bateria
+        Buffers: shared hit=484
+        ->  Sort  (cost=1419.99..1420.03 rows=15 width=44) (actual time=2.608..2.608 rows=5 loops=1)
+              Sort Key: b.id_bateria
+              Sort Method: quicksort  Memory: 25kB
+              Buffers: shared hit=484
+              ->  Nested Loop  (cost=0.56..1419.70 rows=15 width=44) (actual time=1.103..2.607 rows=5 loops=1)
+                    Buffers: shared hit=484
+                    ->  Nested Loop  (cost=0.29..1415.22 rows=15 width=18) (actual time=1.102..2.603 rows=5 loops=1)
+                          Buffers: shared hit=469
+                          ->  Seq Scan on telemetria_bateria t  (cost=0.00..1302.68 rows=15 width=10) (actual time=1.100..2.599 rows=5 loops=1)
+                                Filter: ((temperatura_c > '60'::numeric) AND (marca_tiempo >= '2026-10-01 00:00:00'::timestamp without time zone) AND (marca_tiempo < '2026-11-01 00:00:00'::timestamp without time zone))
+                                Rows Removed by Filter: 48491
+                                Buffers: shared hit=454
+                          ->  Index Scan using pk_vuelo on vuelo v  (cost=0.29..7.50 rows=1 width=12) (actual time=0.001..0.001 rows=1 loops=5)
+                                Index Cond: (id_vuelo = t.id_vuelo)
+                                Buffers: shared hit=15
+                    ->  Index Scan using pk_bateria on bateria b  (cost=0.28..0.30 rows=1 width=30) (actual time=0.001..0.001 rows=1 loops=5)
+                          Index Cond: (id_bateria = v.id_bateria)
+                          Buffers: shared hit=15
+Planning:
+  Buffers: shared hit=35
+Planning Time: 0.097 ms
+Execution Time: 2.623 ms

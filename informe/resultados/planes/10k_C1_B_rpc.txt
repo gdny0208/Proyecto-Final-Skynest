@@ -1,0 +1,49 @@
+Sort  (cost=497.10..498.87 rows=706 width=109) (actual time=0.950..0.955 rows=215 loops=1)
+  Sort Key: (round(((100.0 * (count(*) FILTER (WHERE ((p.estado)::text = 'entregado'::text)))::numeric) / (count(*))::numeric), 1)), (count(*)) DESC
+  Sort Method: quicksort  Memory: 55kB
+  Buffers: shared hit=1100
+  ->  HashAggregate  (cost=444.28..463.70 rows=706 width=109) (actual time=0.791..0.874 rows=215 loops=1)
+        Group Key: n.nombre, d.nombre
+        Batches: 1  Memory Usage: 169kB
+        Buffers: shared hit=1100
+        ->  Nested Loop  (cost=31.87..428.40 rows=706 width=54) (actual time=0.103..0.565 rows=696 loops=1)
+              Buffers: shared hit=1100
+              ->  Hash Join  (cost=31.58..184.58 rows=468 width=41) (actual time=0.102..0.278 rows=473 loops=1)
+                    Hash Cond: (r.ubigeo_destino = d.ubigeo)
+                    Buffers: shared hit=150
+                    ->  Hash Join  (cost=29.46..181.12 rows=468 width=36) (actual time=0.094..0.226 rows=473 loops=1)
+                          Hash Cond: (r.id_nest_origen = n.id_nest)
+                          Buffers: shared hit=149
+                          ->  Hash Join  (cost=27.78..178.04 rows=468 width=23) (actual time=0.088..0.185 rows=473 loops=1)
+                                Hash Cond: (v.id_ruta = r.id_ruta)
+                                Buffers: shared hit=148
+                                ->  Bitmap Heap Scan on vuelo v  (cost=7.28..156.30 rows=468 width=16) (actual time=0.022..0.060 rows=473 loops=1)
+                                      Recheck Cond: ((despegue >= '2026-03-01 00:00:00'::timestamp without time zone) AND (despegue < '2026-04-01 00:00:00'::timestamp without time zone))
+                                      Heap Blocks: exact=137
+                                      Buffers: shared hit=141
+                                      ->  Bitmap Index Scan on ix_c1b_vuelo_despegue_cov  (cost=0.00..7.17 rows=468 width=0) (actual time=0.016..0.016 rows=473 loops=1)
+                                            Index Cond: ((despegue >= '2026-03-01 00:00:00'::timestamp without time zone) AND (despegue < '2026-04-01 00:00:00'::timestamp without time zone))
+                                            Buffers: shared hit=4
+                                ->  Hash  (cost=13.00..13.00 rows=600 width=15) (actual time=0.066..0.066 rows=600 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 36kB
+                                      Buffers: shared hit=7
+                                      ->  Seq Scan on ruta_vuelo r  (cost=0.00..13.00 rows=600 width=15) (actual time=0.001..0.029 rows=600 loops=1)
+                                            Buffers: shared hit=7
+                          ->  Hash  (cost=1.30..1.30 rows=30 width=21) (actual time=0.004..0.005 rows=30 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                                Buffers: shared hit=1
+                                ->  Seq Scan on estacion_nest n  (cost=0.00..1.30 rows=30 width=21) (actual time=0.001..0.002 rows=30 loops=1)
+                                      Buffers: shared hit=1
+                    ->  Hash  (cost=1.50..1.50 rows=50 width=19) (actual time=0.007..0.007 rows=50 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                          Buffers: shared hit=1
+                          ->  Seq Scan on distrito d  (cost=0.00..1.50 rows=50 width=19) (actual time=0.001..0.003 rows=50 loops=1)
+                                Buffers: shared hit=1
+              ->  Index Only Scan using ix_c1b_paquete_vuelo_cov on paquete p  (cost=0.29..0.50 rows=2 width=21) (actual time=0.000..0.000 rows=1 loops=473)
+                    Index Cond: (id_vuelo = v.id_vuelo)
+                    Heap Fetches: 0
+                    Buffers: shared hit=950
+Planning:
+  Buffers: shared hit=32
+Planning Time: 0.174 ms
+Execution Time: 0.973 ms

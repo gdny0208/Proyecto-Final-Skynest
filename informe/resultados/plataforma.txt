@@ -1,0 +1,12 @@
+PostgreSQL: PostgreSQL 14.25 (Homebrew) on aarch64-apple-darwin25.6.0, compiled by Apple clang version 21.0.0 (clang-2100.4.1.1), 64-bit
+shared_buffers: 128MB
+work_mem: 4MB
+effective_cache_size: 4GB
+random_page_cost: 4
+max_parallel_workers_per_gather: 2
+jit: on
+Sistema operativo: macOS-26.5.2-arm64-arm-64bit-Mach-O
+Python: 3.13.0
+CPU: Apple M1
+Núcleos: 8
+RAM: 8 GB

@@ -1,0 +1,29 @@
+Sort  (cost=139.89..139.89 rows=1 width=110) (actual time=0.283..0.284 rows=2 loops=1)
+  Sort Key: (max(t.temperatura_c)) DESC
+  Sort Method: quicksort  Memory: 25kB
+  Buffers: shared hit=58
+  ->  GroupAggregate  (cost=139.84..139.88 rows=1 width=110) (actual time=0.281..0.283 rows=2 loops=1)
+        Group Key: b.id_bateria
+        Buffers: shared hit=58
+        ->  Sort  (cost=139.84..139.85 rows=1 width=44) (actual time=0.278..0.278 rows=2 loops=1)
+              Sort Key: b.id_bateria
+              Sort Method: quicksort  Memory: 25kB
+              Buffers: shared hit=58
+              ->  Nested Loop  (cost=0.55..139.83 rows=1 width=44) (actual time=0.027..0.277 rows=2 loops=1)
+                    Buffers: shared hit=58
+                    ->  Nested Loop  (cost=0.28..139.48 rows=1 width=18) (actual time=0.026..0.275 rows=2 loops=1)
+                          Buffers: shared hit=52
+                          ->  Seq Scan on telemetria_bateria t  (cost=0.00..131.17 rows=1 width=10) (actual time=0.024..0.272 rows=2 loops=1)
+                                Filter: ((temperatura_c > '60'::numeric) AND (marca_tiempo >= '2026-10-01 00:00:00'::timestamp without time zone) AND (marca_tiempo < '2026-11-01 00:00:00'::timestamp without time zone))
+                                Rows Removed by Filter: 4865
+                                Buffers: shared hit=46
+                          ->  Index Scan using pk_vuelo on vuelo v  (cost=0.28..8.29 rows=1 width=12) (actual time=0.001..0.001 rows=1 loops=2)
+                                Index Cond: (id_vuelo = t.id_vuelo)
+                                Buffers: shared hit=6
+                    ->  Index Scan using pk_bateria on bateria b  (cost=0.28..0.35 rows=1 width=30) (actual time=0.001..0.001 rows=1 loops=2)
+                          Index Cond: (id_bateria = v.id_bateria)
+                          Buffers: shared hit=6
+Planning:
+  Buffers: shared hit=38
+Planning Time: 0.105 ms
+Execution Time: 0.293 ms

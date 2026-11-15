@@ -1,0 +1,16 @@
+200 0.024259s  /
+200 0.002038s  /rastrear
+200 0.001882s  /despacho
+200 0.001599s  /laboratorio
+200 1.037589s  /api/bases
+200 3.025437s  /api/panel?base=skynest_1m
+200 0.017418s  /api/rastrear/SKY000000010?base=skynest_1k
+{
+  "enviados": 67396,
+  "entregados": 64527,
+  "tasa": 95.7,
+  "min_entrega": 7.5,
+  "vuelos": 45463,
+  "drones": 300,
+  "disponibles": 300
+}

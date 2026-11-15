@@ -1,0 +1,51 @@
+Sort  (cost=16412.17..16412.92 rows=300 width=161) (actual time=15.821..15.827 rows=300 loops=1)
+  Sort Key: (round(((sum((EXTRACT(epoch FROM (v.aterrizaje - v.despegue)) / '3600'::numeric))) - avg((sum((EXTRACT(epoch FROM (v.aterrizaje - v.despegue)) / '3600'::numeric)))) OVER (?)), 2)), v.id_drone
+  Sort Method: quicksort  Memory: 67kB
+  Buffers: shared hit=1048
+  ->  WindowAgg  (cost=16386.28..16399.82 rows=300 width=161) (actual time=15.585..15.752 rows=300 loops=1)
+        Buffers: shared hit=1048
+        ->  Merge Join  (cost=16386.28..16390.82 rows=300 width=80) (actual time=15.574..15.603 rows=300 loops=1)
+              Merge Cond: (d.id_modelo = m.id_modelo)
+              Buffers: shared hit=1048
+              ->  Sort  (cost=16385.08..16385.83 rows=300 width=65) (actual time=15.568..15.575 rows=300 loops=1)
+                    Sort Key: d.id_modelo
+                    Sort Method: quicksort  Memory: 63kB
+                    Buffers: shared hit=1047
+                    ->  Hash Join  (cost=16364.04..16372.74 rows=300 width=65) (actual time=15.473..15.538 rows=300 loops=1)
+                          Hash Cond: (d.id_nest_base = n.id_nest)
+                          Buffers: shared hit=1047
+                          ->  Hash Join  (cost=16362.37..16370.17 rows=300 width=52) (actual time=15.467..15.509 rows=300 loops=1)
+                                Hash Cond: (d.id_drone = v.id_drone)
+                                Buffers: shared hit=1046
+                                ->  Seq Scan on drone d  (cost=0.00..7.00 rows=300 width=12) (actual time=0.001..0.010 rows=300 loops=1)
+                                      Buffers: shared hit=4
+                                ->  Hash  (cost=16358.62..16358.62 rows=300 width=44) (actual time=15.464..15.465 rows=300 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 27kB
+                                      Buffers: shared hit=1042
+                                      ->  HashAggregate  (cost=16351.87..16355.62 rows=300 width=44) (actual time=15.403..15.441 rows=300 loops=1)
+                                            Group Key: v.id_drone
+                                            Batches: 1  Memory Usage: 285kB
+                                            Buffers: shared hit=1042
+                                            ->  Bitmap Heap Scan on vuelo v  (cost=828.70..15731.08 rows=41386 width=20) (actual time=1.466..6.010 rows=43918 loops=1)
+                                                  Recheck Cond: ((despegue >= '2026-09-01 00:00:00'::timestamp without time zone) AND (despegue < '2026-10-01 00:00:00'::timestamp without time zone))
+                                                  Filter: ((estado)::text = ANY ('{completado,abortado}'::text[]))
+                                                  Heap Blocks: exact=936
+                                                  Buffers: shared hit=1042
+                                                  ->  Bitmap Index Scan on ix_c4a_vuelo_despegue  (cost=0.00..818.36 rows=42193 width=0) (actual time=1.405..1.405 rows=43918 loops=1)
+                                                        Index Cond: ((despegue >= '2026-09-01 00:00:00'::timestamp without time zone) AND (despegue < '2026-10-01 00:00:00'::timestamp without time zone))
+                                                        Buffers: shared hit=106
+                          ->  Hash  (cost=1.30..1.30 rows=30 width=21) (actual time=0.006..0.006 rows=30 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                                Buffers: shared hit=1
+                                ->  Seq Scan on estacion_nest n  (cost=0.00..1.30 rows=30 width=21) (actual time=0.001..0.003 rows=30 loops=1)
+                                      Buffers: shared hit=1
+              ->  Sort  (cost=1.20..1.22 rows=8 width=19) (actual time=0.004..0.004 rows=8 loops=1)
+                    Sort Key: m.id_modelo
+                    Sort Method: quicksort  Memory: 25kB
+                    Buffers: shared hit=1
+                    ->  Seq Scan on modelo_drone m  (cost=0.00..1.08 rows=8 width=19) (actual time=0.002..0.002 rows=8 loops=1)
+                          Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=8
+Planning Time: 0.130 ms
+Execution Time: 15.861 ms

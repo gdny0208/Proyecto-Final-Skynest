@@ -1,0 +1,35 @@
+Sort  (cost=9563.64..9563.99 rows=139 width=110) (actual time=13.006..13.295 rows=70 loops=1)
+  Sort Key: (max(t.temperatura_c)) DESC
+  Sort Method: quicksort  Memory: 34kB
+  Buffers: shared hit=1380 read=3705
+  ->  GroupAggregate  (cost=9497.87..9558.69 rows=139 width=110) (actual time=12.807..13.275 rows=70 loops=1)
+        Group Key: b.id_bateria
+        Buffers: shared hit=1380 read=3705
+        ->  Nested Loop  (cost=9497.87..9554.52 rows=139 width=44) (actual time=12.794..13.179 rows=89 loops=1)
+              Buffers: shared hit=1380 read=3705
+              ->  Gather Merge  (cost=9497.59..9513.78 rows=139 width=18) (actual time=12.787..13.082 rows=89 loops=1)
+                    Workers Planned: 2
+                    Workers Launched: 2
+                    Buffers: shared hit=1113 read=3705
+                    ->  Sort  (cost=8497.57..8497.71 rows=58 width=18) (actual time=11.415..11.416 rows=30 loops=3)
+                          Sort Key: v.id_bateria
+                          Sort Method: quicksort  Memory: 27kB
+                          Buffers: shared hit=1113 read=3705
+                          Worker 0:  Sort Method: quicksort  Memory: 27kB
+                          Worker 1:  Sort Method: quicksort  Memory: 27kB
+                          ->  Nested Loop  (cost=0.29..8495.87 rows=58 width=18) (actual time=0.331..11.402 rows=30 loops=3)
+                                Buffers: shared hit=1097 read=3705
+                                ->  Parallel Seq Scan on telemetria_bateria t  (cost=0.00..8068.97 rows=58 width=10) (actual time=0.322..11.300 rows=30 loops=3)
+                                      Filter: ((temperatura_c > '60'::numeric) AND (marca_tiempo >= '2026-10-01 00:00:00'::timestamp without time zone) AND (marca_tiempo < '2026-11-01 00:00:00'::timestamp without time zone))
+                                      Rows Removed by Filter: 161615
+                                      Buffers: shared hit=828 read=3705
+                                ->  Index Scan using pk_vuelo on vuelo v  (cost=0.29..7.36 rows=1 width=12) (actual time=0.003..0.003 rows=1 loops=89)
+                                      Index Cond: (id_vuelo = t.id_vuelo)
+                                      Buffers: shared hit=269
+              ->  Index Scan using pk_bateria on bateria b  (cost=0.28..0.29 rows=1 width=30) (actual time=0.001..0.001 rows=1 loops=89)
+                    Index Cond: (id_bateria = v.id_bateria)
+                    Buffers: shared hit=267
+Planning:
+  Buffers: shared hit=42
+Planning Time: 0.170 ms
+Execution Time: 13.312 ms

@@ -1,0 +1,40 @@
+Sort  (cost=4388.34..4390.59 rows=900 width=111) (actual time=2.325..2.344 rows=466 loops=1)
+  Sort Key: (max(t.temperatura_c)) DESC
+  Sort Method: quicksort  Memory: 90kB
+  Buffers: shared hit=3753
+  ->  GroupAggregate  (cost=4169.91..4344.18 rows=900 width=111) (actual time=1.684..2.228 rows=466 loops=1)
+        Group Key: b.id_bateria
+        Buffers: shared hit=3753
+        ->  Gather Merge  (cost=4169.91..4311.23 rows=1240 width=45) (actual time=1.678..1.734 rows=787 loops=1)
+              Workers Planned: 1
+              Workers Launched: 1
+              Buffers: shared hit=3753
+              ->  Sort  (cost=3169.90..3171.72 rows=729 width=45) (actual time=0.711..0.719 rows=394 loops=2)
+                    Sort Key: b.id_bateria
+                    Sort Method: quicksort  Memory: 86kB
+                    Buffers: shared hit=3753
+                    Worker 0:  Sort Method: quicksort  Memory: 25kB
+                    ->  Hash Join  (cost=49.17..3135.23 rows=729 width=45) (actual time=0.119..0.658 rows=394 loops=2)
+                          Hash Cond: (v.id_bateria = b.id_bateria)
+                          Buffers: shared hit=3745
+                          ->  Nested Loop  (cost=18.92..3103.06 rows=729 width=18) (actual time=0.049..0.550 rows=394 loops=2)
+                                Buffers: shared hit=3735
+                                ->  Parallel Bitmap Heap Scan on telemetria_bateria t  (cost=18.49..1357.75 rows=729 width=10) (actual time=0.048..0.161 rows=394 loops=2)
+                                      Recheck Cond: ((marca_tiempo >= '2026-10-01 00:00:00'::timestamp without time zone) AND (marca_tiempo < '2026-11-01 00:00:00'::timestamp without time zone) AND (temperatura_c > '60'::numeric))
+                                      Heap Blocks: exact=583
+                                      Buffers: shared hit=587
+                                      ->  Bitmap Index Scan on ix_c3b_telemetria_alertas  (cost=0.00..18.18 rows=1240 width=0) (actual time=0.052..0.052 rows=787 loops=1)
+                                            Index Cond: ((marca_tiempo >= '2026-10-01 00:00:00'::timestamp without time zone) AND (marca_tiempo < '2026-11-01 00:00:00'::timestamp without time zone))
+                                            Buffers: shared hit=4
+                                ->  Index Scan using pk_vuelo on vuelo v  (cost=0.42..2.39 rows=1 width=12) (actual time=0.001..0.001 rows=1 loops=787)
+                                      Index Cond: (id_vuelo = t.id_vuelo)
+                                      Buffers: shared hit=3148
+                          ->  Hash  (cost=19.00..19.00 rows=900 width=31) (actual time=0.138..0.138 rows=900 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 65kB
+                                Buffers: shared hit=10
+                                ->  Seq Scan on bateria b  (cost=0.00..19.00 rows=900 width=31) (actual time=0.002..0.069 rows=900 loops=1)
+                                      Buffers: shared hit=10
+Planning:
+  Buffers: shared hit=48
+Planning Time: 0.149 ms
+Execution Time: 2.367 ms

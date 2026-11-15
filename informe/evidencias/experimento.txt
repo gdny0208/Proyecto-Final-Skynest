@@ -1,0 +1,106 @@
+=== skynest_1k ===
+    1k C1 sin media      0.33 ms
+    1k C1 A   media      0.27 ms   (índices: 0.1 MB, creados en 0.0 s)
+    1k C1 B   media      0.18 ms   (índices: 0.1 MB, creados en 0.0 s)
+    1k C2 sin media      0.23 ms
+    1k C2 A   media      0.23 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C2 B   media      0.20 ms   (índices: 0.2 MB, creados en 0.0 s)
+    1k C3 sin media      0.29 ms
+    1k C3 A   media      0.02 ms   (índices: 0.1 MB, creados en 0.0 s)
+    1k C3 B   media      0.02 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C4 sin media      0.19 ms
+    1k C4 A   media      0.11 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C4 B   media      0.18 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C5 sin media      0.25 ms
+    1k C5 A   media      0.13 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C5 B   media      0.12 ms   (índices: 0.1 MB, creados en 0.0 s)
+    1k telemetria_insert  sin       media     58.28 ms
+    1k telemetria_insert  btree     media     71.39 ms
+    1k telemetria_insert  parcial   media     67.21 ms
+    1k telemetria_insert  brin      media     58.32 ms
+    1k telemetria_insert  todos     media    112.48 ms
+    1k paquete_update     sin       media      7.65 ms
+    1k paquete_update     btree     media      8.99 ms
+    1k paquete_update     compuesto media      9.37 ms
+    1k paquete_update     hash      media      7.82 ms
+    1k paquete_update     todos     media     14.18 ms
+=== skynest_10k ===
+   10k C1 sin media      2.21 ms
+   10k C1 A   media      1.78 ms   (índices: 0.5 MB, creados en 0.0 s)
+   10k C1 B   media      0.88 ms   (índices: 0.9 MB, creados en 0.0 s)
+   10k C2 sin media      1.03 ms
+   10k C2 A   media      0.78 ms   (índices: 0.3 MB, creados en 0.0 s)
+   10k C2 B   media      0.57 ms   (índices: 2.1 MB, creados en 0.0 s)
+   10k C3 sin media      2.61 ms
+   10k C3 A   media      0.07 ms   (índices: 1.1 MB, creados en 0.0 s)
+   10k C3 B   media      0.03 ms   (índices: 0.0 MB, creados en 0.0 s)
+   10k C4 sin media      1.24 ms
+   10k C4 A   media      0.50 ms   (índices: 0.2 MB, creados en 0.0 s)
+   10k C4 B   media      1.22 ms   (índices: 0.0 MB, creados en 0.0 s)
+   10k C5 sin media      2.29 ms
+   10k C5 A   media      1.06 ms   (índices: 0.3 MB, creados en 0.0 s)
+   10k C5 B   media      0.90 ms   (índices: 1.0 MB, creados en 0.0 s)
+   10k telemetria_insert  sin       media     58.88 ms
+   10k telemetria_insert  btree     media     70.40 ms
+   10k telemetria_insert  parcial   media     70.96 ms
+   10k telemetria_insert  brin      media     61.61 ms
+   10k telemetria_insert  todos     media    130.48 ms
+   10k paquete_update     sin       media      9.73 ms
+   10k paquete_update     btree     media     11.88 ms
+   10k paquete_update     compuesto media     12.03 ms
+   10k paquete_update     hash      media     10.32 ms
+   10k paquete_update     todos     media     20.59 ms
+=== skynest_100k ===
+  100k C1 sin media     16.90 ms
+  100k C1 A   media     18.70 ms   (índices: 5.0 MB, creados en 0.1 s)
+  100k C1 B   media      5.35 ms   (índices: 8.9 MB, creados en 0.1 s)
+  100k C2 sin media      8.81 ms
+  100k C2 A   media      2.17 ms   (índices: 3.0 MB, creados en 0.0 s)
+  100k C2 B   media      3.80 ms   (índices: 20.9 MB, creados en 0.5 s)
+  100k C3 sin media     13.53 ms
+  100k C3 A   media      0.73 ms   (índices: 10.4 MB, creados en 0.4 s)
+  100k C3 B   media      0.22 ms   (índices: 0.1 MB, creados en 0.0 s)
+  100k C4 sin media      9.78 ms
+  100k C4 A   media      1.89 ms   (índices: 2.1 MB, creados en 0.0 s)
+  100k C4 B   media      9.86 ms   (índices: 0.0 MB, creados en 0.0 s)
+  100k C5 sin media     16.34 ms
+  100k C5 A   media     10.08 ms   (índices: 2.8 MB, creados en 0.0 s)
+  100k C5 B   media      8.96 ms   (índices: 9.6 MB, creados en 0.2 s)
+  100k telemetria_insert  sin       media     60.97 ms
+  100k telemetria_insert  btree     media     74.15 ms
+  100k telemetria_insert  parcial   media     71.53 ms
+  100k telemetria_insert  brin      media     62.71 ms
+  100k telemetria_insert  todos     media    109.76 ms
+  100k paquete_update     sin       media     10.15 ms
+  100k paquete_update     btree     media     12.25 ms
+  100k paquete_update     compuesto media     13.22 ms
+  100k paquete_update     hash      media     10.70 ms
+  100k paquete_update     todos     media     18.97 ms
+=== skynest_1m ===
+    1m C1 sin media    109.86 ms
+    1m C1 A   media     87.88 ms   (índices: 47.0 MB, creados en 1.3 s)
+    1m C1 B   media     27.40 ms   (índices: 88.2 MB, creados en 3.3 s)
+    1m C2 sin media     46.37 ms
+    1m C2 A   media     21.16 ms   (índices: 29.6 MB, creados en 0.7 s)
+    1m C2 B   media     37.59 ms   (índices: 205.8 MB, creados en 6.2 s)
+    1m C3 sin media    126.65 ms
+    1m C3 A   media     21.69 ms   (índices: 104.1 MB, creados en 4.4 s)
+    1m C3 B   media      2.87 ms   (índices: 0.4 MB, creados en 0.3 s)
+    1m C4 sin media     43.35 ms
+    1m C4 A   media     14.94 ms   (índices: 18.2 MB, creados en 0.6 s)
+    1m C4 B   media     41.34 ms   (índices: 0.0 MB, creados en 0.1 s)
+    1m C5 sin media    113.38 ms
+    1m C5 A   media     50.42 ms   (índices: 27.9 MB, creados en 0.8 s)
+    1m C5 B   media     41.42 ms   (índices: 96.1 MB, creados en 4.1 s)
+    1m telemetria_insert  sin       media     63.77 ms
+    1m telemetria_insert  btree     media     76.84 ms
+    1m telemetria_insert  parcial   media     74.67 ms
+    1m telemetria_insert  brin      media     65.13 ms
+    1m telemetria_insert  todos     media    174.71 ms
+    1m paquete_update     sin       media     10.84 ms
+    1m paquete_update     btree     media     12.02 ms
+    1m paquete_update     compuesto media     14.46 ms
+    1m paquete_update     hash      media     11.52 ms
+    1m paquete_update     todos     media     19.57 ms
+Experimento terminado en 153 s
+Resúmenes, tablas LaTeX y gráficos en /Users/giuseppedelnegro/Downloads/01 UTEC/2026-2/Base de Datos 1/Proyecto Final Hito 2/informe/resultados

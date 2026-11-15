@@ -1,0 +1,180 @@
+=================== skynest_1k (N = 1000 vuelos) ===================
+Generando N = 1,000 vuelos para skynest_1k ...
+Generación: 3.0 s. Cargando con COPY:
+  ruta_vuelo                  600 filas      0.0 s
+  punto_ruta                4,236 filas      0.0 s
+  drone                       300 filas      0.0 s
+  bateria                     900 filas      0.0 s
+  operador                    120 filas      0.0 s
+  autorizacion              7,872 filas      0.0 s
+  permiso_vuelo                32 filas      0.0 s
+  cliente                     101 filas      0.0 s
+  cliente_persona              76 filas      0.0 s
+  cliente_empresa              25 filas      0.0 s
+  vuelo                     1,000 filas      0.0 s
+  paquete                   1,531 filas      0.0 s
+  telemetria_bateria        4,867 filas      0.0 s
+Listo en 3.3 s.
+  ejecutando sql/03_triggers.sql
+  ejecutando sql/04_procedimientos.sql
+  ejecutando sql/05_vistas.sql
+  ejecutando sql/06_roles.sql
+                                regla                                | violaciones | estado 
+---------------------------------------------------------------------+-------------+--------
+ FK vuelo -> drone/bateria/ruta/operador                             |           0 | OK
+ FK paquete -> cliente/vuelo                                         |           0 | OK
+ FK telemetria -> vuelo                                              |           0 | OK
+ FK autorizacion -> operador/modelo/distrito                         |           0 | OK
+ (i) R16 cobertura y no solapamiento de clientes                     |           0 | OK
+ (ii) R15 peso por vuelo <= carga util                               |           0 | OK
+ (iii) R11 licencia vigente                                          |           0 | OK
+ (iii) R11 autorizacion vigente (operador, modelo, distrito)         |           0 | OK
+ (iv) R9 permiso para distrito restringido                           |           0 | OK
+ (v) R14 distrito paquete = destino ruta                             |           0 | OK
+ (vi) R10 nest del drone = origen de la ruta                         |           0 | OK
+ (vii) R12 bateria sin vuelos solapados                              |           0 | OK
+ R12/R10 vuelos programados con bateria operativa y drone disponible |           0 | OK
+ (viii) R17 telemetria dentro del vuelo                              |           0 | OK
+ (ix) R2 capacidad del nest                                          |           0 | OK
+ (x) R6 rutas con al menos 2 puntos                                  |           0 | OK
+ R6 altitud de puntos <= altitud maxima                              |           0 | OK
+ Paquete entregado durante su vuelo                                  |           0 | OK
+(18 rows)
+
+ vuelos | paquetes | paq_por_vuelo | lecturas | paquetes_sin_coord | vuelos_con_lectura_perdida 
+--------+----------+---------------+----------+--------------------+----------------------------
+   1000 |     1531 |          1.53 |     4867 |                 74 |                         35
+(1 row)
+
+  dump: dumps/skynest_1k.dump (488K)
+=================== skynest_10k (N = 10000 vuelos) ===================
+Generando N = 10,000 vuelos para skynest_10k ...
+Generación: 0.8 s. Cargando con COPY:
+  ruta_vuelo                  600 filas      0.0 s
+  punto_ruta                4,236 filas      0.0 s
+  drone                       300 filas      0.0 s
+  bateria                     900 filas      0.0 s
+  operador                    120 filas      0.0 s
+  autorizacion              7,872 filas      0.0 s
+  permiso_vuelo                32 filas      0.0 s
+  cliente                   1,013 filas      0.0 s
+  cliente_persona             760 filas      0.0 s
+  cliente_empresa             253 filas      0.0 s
+  vuelo                    10,000 filas      0.1 s
+  paquete                  15,081 filas      0.1 s
+  telemetria_bateria       48,496 filas      0.2 s
+Listo en 1.8 s.
+  ejecutando sql/03_triggers.sql
+  ejecutando sql/04_procedimientos.sql
+  ejecutando sql/05_vistas.sql
+  ejecutando sql/06_roles.sql
+                                regla                                | violaciones | estado 
+---------------------------------------------------------------------+-------------+--------
+ FK vuelo -> drone/bateria/ruta/operador                             |           0 | OK
+ FK paquete -> cliente/vuelo                                         |           0 | OK
+ FK telemetria -> vuelo                                              |           0 | OK
+ FK autorizacion -> operador/modelo/distrito                         |           0 | OK
+ (i) R16 cobertura y no solapamiento de clientes                     |           0 | OK
+ (ii) R15 peso por vuelo <= carga util                               |           0 | OK
+ (iii) R11 licencia vigente                                          |           0 | OK
+ (iii) R11 autorizacion vigente (operador, modelo, distrito)         |           0 | OK
+ (iv) R9 permiso para distrito restringido                           |           0 | OK
+ (v) R14 distrito paquete = destino ruta                             |           0 | OK
+ (vi) R10 nest del drone = origen de la ruta                         |           0 | OK
+ (vii) R12 bateria sin vuelos solapados                              |           0 | OK
+ R12/R10 vuelos programados con bateria operativa y drone disponible |           0 | OK
+ (viii) R17 telemetria dentro del vuelo                              |           0 | OK
+ (ix) R2 capacidad del nest                                          |           0 | OK
+ (x) R6 rutas con al menos 2 puntos                                  |           0 | OK
+ R6 altitud de puntos <= altitud maxima                              |           0 | OK
+ Paquete entregado durante su vuelo                                  |           0 | OK
+(18 rows)
+
+ vuelos | paquetes | paq_por_vuelo | lecturas | paquetes_sin_coord | vuelos_con_lectura_perdida 
+--------+----------+---------------+----------+--------------------+----------------------------
+  10000 |    15081 |          1.51 |    48496 |                722 |                        289
+(1 row)
+
+  dump: dumps/skynest_10k.dump (2.3M)
+=================== skynest_100k (N = 100000 vuelos) ===================
+Generando N = 100,000 vuelos para skynest_100k ...
+Generación: 6.4 s. Cargando con COPY:
+  ruta_vuelo                  600 filas      0.0 s
+  punto_ruta                4,236 filas      0.0 s
+  drone                       300 filas      0.0 s
+  bateria                     900 filas      0.0 s
+  operador                    120 filas      0.0 s
+  autorizacion              7,872 filas      0.0 s
+  permiso_vuelo                32 filas      0.0 s
+  cliente                  10,133 filas      0.1 s
+  cliente_persona           7,600 filas      0.0 s
+  cliente_empresa           2,533 filas      0.0 s
+  vuelo                   100,000 filas      2.1 s
+  paquete                 150,219 filas      1.6 s
+  telemetria_bateria      484,933 filas      1.5 s
+Listo en 12.8 s.
+  ejecutando sql/03_triggers.sql
+  ejecutando sql/04_procedimientos.sql
+  ejecutando sql/05_vistas.sql
+  ejecutando sql/06_roles.sql
+                                regla                                | violaciones | estado 
+---------------------------------------------------------------------+-------------+--------
+ FK vuelo -> drone/bateria/ruta/operador                             |           0 | OK
+ FK paquete -> cliente/vuelo                                         |           0 | OK
+ FK telemetria -> vuelo                                              |           0 | OK
+ FK autorizacion -> operador/modelo/distrito                         |           0 | OK
+ (i) R16 cobertura y no solapamiento de clientes                     |           0 | OK
+ (ii) R15 peso por vuelo <= carga util                               |           0 | OK
+ (iii) R11 licencia vigente                                          |           0 | OK
+ (iii) R11 autorizacion vigente (operador, modelo, distrito)         |           0 | OK
+ (iv) R9 permiso para distrito restringido                           |           0 | OK
+ (v) R14 distrito paquete = destino ruta                             |           0 | OK
+ (vi) R10 nest del drone = origen de la ruta                         |           0 | OK
+ (vii) R12 bateria sin vuelos solapados                              |           0 | OK
+ R12/R10 vuelos programados con bateria operativa y drone disponible |           0 | OK
+ (viii) R17 telemetria dentro del vuelo                              |           0 | OK
+ (ix) R2 capacidad del nest                                          |           0 | OK
+ (x) R6 rutas con al menos 2 puntos                                  |           0 | OK
+ R6 altitud de puntos <= altitud maxima                              |           0 | OK
+ Paquete entregado durante su vuelo                                  |           0 | OK
+(18 rows)
+
+ vuelos | paquetes | paq_por_vuelo | lecturas | paquetes_sin_coord | vuelos_con_lectura_perdida 
+--------+----------+---------------+----------+--------------------+----------------------------
+ 100000 |   150219 |          1.50 |   484933 |               7612 |                       2936
+(1 row)
+
+  dump: dumps/skynest_100k.dump ( 20M)
+=================== skynest_1m (N = 1000000 vuelos) ===================
+psycopg2.errors.DiskFull: could not write to file "pg_wal/xlogtemp.95703": No space left on device
+CONTEXT:  COPY paquete, line 1437257
+
+
+The above exception was the direct cause of the following exception:
+
+SystemError: <function decode at 0x100e8f2e0> returned a result with an exception set
+Generando N = 1,000,000 vuelos para skynest_1m ...
+Generación: 63.4 s. Cargando con COPY:
+  ruta_vuelo                  600 filas      0.0 s
+  punto_ruta                4,236 filas      0.0 s
+  drone                       300 filas      0.0 s
+  bateria                     900 filas      0.0 s
+  operador                    120 filas      0.0 s
+  autorizacion              7,872 filas      0.0 s
+  permiso_vuelo                32 filas      0.0 s
+  cliente                 101,333 filas      0.7 s
+  cliente_persona          76,000 filas      0.5 s
+  cliente_empresa          25,333 filas      0.2 s
+  vuelo                 1,000,000 filas     28.9 s
+Traceback (most recent call last):
+  File "/Users/giuseppedelnegro/Downloads/01 UTEC/2026-2/Base de Datos 1/Proyecto Final Hito 2/gen/generar.py", line 567, in <module>
+    main()
+    ~~~~^^
+  File "/Users/giuseppedelnegro/Downloads/01 UTEC/2026-2/Base de Datos 1/Proyecto Final Hito 2/gen/generar.py", line 559, in main
+    cargar(conn, T)
+    ~~~~~~^^^^^^^^^
+  File "/Users/giuseppedelnegro/Downloads/01 UTEC/2026-2/Base de Datos 1/Proyecto Final Hito 2/gen/generar.py", line 531, in cargar
+    cur.copy_expert(f"COPY {t} ({tabla.columnas}) FROM STDIN WITH (FORMAT csv)", fh)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.OperationalError: invalid socket
+

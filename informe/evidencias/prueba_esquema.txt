@@ -1,0 +1,102 @@
+BEGIN
+=== 1. Caso válido de punta a punta (todo debe insertarse) ===
+INSERT 0 3
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+        resultado         | vuelos | paquetes | lecturas 
+--------------------------+--------+----------+----------
+ filas válidas insertadas |      1 |        1 |        2
+(1 row)
+
+
+=== 2. Intentos inválidos (cada uno debe dar ERROR) ===
+--- PK duplicada (telemetría: misma marca de tiempo en el mismo vuelo)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:60: ERROR:  duplicate key value violates unique constraint "pk_telemetria_bateria"
+ROLLBACK
+--- UNIQUE (código de tracking repetido)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:67: ERROR:  duplicate key value violates unique constraint "uq_paquete_tracking"
+ROLLBACK
+--- FK (drone con un modelo que no existe)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:73: ERROR:  insert or update on table "drone" violates foreign key constraint "fk_drone_modelo"
+ROLLBACK
+--- FK con NO ACTION (borrar un drone que ya tiene vuelos)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:78: ERROR:  update or delete on table "drone" violates foreign key constraint "fk_vuelo_drone" on table "vuelo"
+ROLLBACK
+--- CHECK de formato (DNI con letras)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:84: ERROR:  new row for relation "operador" violates check constraint "ck_operador_dni"
+ROLLBACK
+--- CHECK de dominio (carga de batería 120 %)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:89: ERROR:  new row for relation "telemetria_bateria" violates check constraint "ck_telemetria_carga"
+ROLLBACK
+--- CHECK R12 (batería con 65 % de salud marcada como operativa)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:94: ERROR:  new row for relation "bateria" violates check constraint "ck_bateria_salud_estado"
+ROLLBACK
+--- CHECK R18 (aterrizaje antes del despegue)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:100: ERROR:  new row for relation "vuelo" violates check constraint "ck_vuelo_aterrizaje_despegue"
+ROLLBACK
+--- CHECK estado/tiempos (vuelo completado sin aterrizaje)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:106: ERROR:  new row for relation "vuelo" violates check constraint "ck_vuelo_estado_tiempos"
+ROLLBACK
+--- EXCLUDE R12 (misma batería en un vuelo que se solapa: 10:10-10:20 vs 10:02-10:15)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:112: ERROR:  conflicting key value violates exclusion constraint "ex_vuelo_bateria_solape"
+ROLLBACK
+--- CHECK R19 (paquete entregado sin fecha de entrega)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:117: ERROR:  new row for relation "paquete" violates check constraint "ck_paquete_entregado_fecha"
+ROLLBACK
+--- CHECK R19 (paquete en_ruta sin vuelo)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:122: ERROR:  new row for relation "paquete" violates check constraint "ck_paquete_estado_vuelo"
+ROLLBACK
+--- CHECK coordenadas (latitud sin longitud)
+SAVEPOINT
+psql:sql/01_schema_prueba.sql:127: ERROR:  new row for relation "paquete" violates check constraint "ck_paquete_coordenadas"
+ROLLBACK
+
+=== 3. Casos que SÍ deben pasar ===
+--- Misma batería en un vuelo que NO se solapa (10:30-10:40)
+SAVEPOINT
+INSERT 0 1
+ROLLBACK
+--- Vuelo programado sin horarios reales (el EXCLUDE no aplica)
+SAVEPOINT
+INSERT 0 1
+ROLLBACK
+--- Paquete sin coordenadas (dato faltante permitido)
+SAVEPOINT
+UPDATE 1
+ROLLBACK
+--- Borrar un vuelo borra en cascada su telemetría (entidad débil)
+SAVEPOINT
+UPDATE 1
+DELETE 1
+ lecturas_tras_borrar_vuelo 
+----------------------------
+                          0
+(1 row)
+
+ROLLBACK
+ROLLBACK
+
+=== Fin: transacción deshecha, la base queda vacía ===

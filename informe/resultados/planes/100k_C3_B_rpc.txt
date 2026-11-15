@@ -1,0 +1,31 @@
+Sort  (cost=450.95..451.25 rows=122 width=110) (actual time=0.244..0.245 rows=70 loops=1)
+  Sort Key: (max(t.temperatura_c)) DESC
+  Sort Method: quicksort  Memory: 34kB
+  Buffers: shared hit=352
+  ->  GroupAggregate  (cost=442.76..446.72 rows=122 width=110) (actual time=0.164..0.231 rows=70 loops=1)
+        Group Key: b.id_bateria
+        Buffers: shared hit=352
+        ->  Sort  (cost=442.76..443.06 rows=122 width=44) (actual time=0.162..0.164 rows=89 loops=1)
+              Sort Key: b.id_bateria
+              Sort Method: quicksort  Memory: 31kB
+              Buffers: shared hit=352
+              ->  Hash Join  (cost=414.93..438.53 rows=122 width=44) (actual time=0.080..0.153 rows=89 loops=1)
+                    Hash Cond: (b.id_bateria = v.id_bateria)
+                    Buffers: shared hit=352
+                    ->  Seq Scan on bateria b  (cost=0.00..19.00 rows=900 width=30) (actual time=0.001..0.025 rows=900 loops=1)
+                          Buffers: shared hit=10
+                    ->  Hash  (cost=413.41..413.41 rows=122 width=18) (actual time=0.078..0.078 rows=89 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 13kB
+                          Buffers: shared hit=342
+                          ->  Nested Loop  (cost=0.57..413.41 rows=122 width=18) (actual time=0.003..0.071 rows=89 loops=1)
+                                Buffers: shared hit=342
+                                ->  Index Scan using ix_c3b_telemetria_alertas on telemetria_bateria t  (cost=0.28..136.89 rows=122 width=10) (actual time=0.001..0.013 rows=89 loops=1)
+                                      Index Cond: ((marca_tiempo >= '2026-10-01 00:00:00'::timestamp without time zone) AND (marca_tiempo < '2026-11-01 00:00:00'::timestamp without time zone))
+                                      Buffers: shared hit=75
+                                ->  Index Scan using pk_vuelo on vuelo v  (cost=0.29..2.27 rows=1 width=12) (actual time=0.001..0.001 rows=1 loops=89)
+                                      Index Cond: (id_vuelo = t.id_vuelo)
+                                      Buffers: shared hit=267
+Planning:
+  Buffers: shared hit=42
+Planning Time: 0.108 ms
+Execution Time: 0.255 ms

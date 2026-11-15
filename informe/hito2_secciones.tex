@@ -1,8 +1,8 @@
 % =====================================================================
 % SkyNest · Hito 2: secciones 4 a 7
 % Los resultados del experimento se leen de resultados/ (bench/experimento.py).
-% Las líneas marcadas con "% VERIFICAR" citan valores de la corrida de prueba:
-% revisarlas contra las tablas finales antes de entregar.
+% Las cifras citadas en el texto corresponden a la corrida oficial del 14/11/2026
+% (Apple M1, PostgreSQL 14.25) guardada en resultados/.
 % =====================================================================
 
 \newpage
@@ -108,7 +108,7 @@ Los datos se generan respetando todas las reglas, de modo que se cargan sin rech
 \item Las lecturas caen entre el despegue y el aterrizaje (R17).
 \end{itemize}
 
-La carga usa \texttt{COPY} con \texttt{session\_replication\_role = replica}, que desactiva los triggers y las FK durante la carga masiva. Los CHECK, PK, UNIQUE y EXCLUDE siguen activos. Como las FK no se validan en ese momento, \archivo{gen/verificar.sql} comprueba después 18 reglas (huérfanos, R2, R6, R9--R12, R14--R17, cobertura de clientes) y en las cuatro escalas da \textbf{0 violaciones}. La escala de un millón se genera y carga en unos 3 minutos. % VERIFICAR con el tiempo en la plataforma de pruebas
+La carga usa \texttt{COPY} con \texttt{session\_replication\_role = replica}, que desactiva los triggers y las FK durante la carga masiva. Los CHECK, PK, UNIQUE y EXCLUDE siguen activos. Como las FK no se validan en ese momento, \archivo{gen/verificar.sql} comprueba después 18 reglas (huérfanos, R2, R6, R9--R12, R14--R17, cobertura de clientes) y en las cuatro escalas da \textbf{0 violaciones}. La escala de un millón se genera en unos 60\,s y se carga con \texttt{COPY} en otros 60\,s (122\,s en total en la plataforma de pruebas); construir las cuatro escalas, con verificación y dumps, toma unos 3,5 minutos.
 
 % ---------------------------------------------------------------------
 \subsection{Simulación de Datos Faltantes}
@@ -515,51 +515,50 @@ Las cuatro bases están en el mismo servidor local, con la configuración por de
 
 % ---------------------------------------------------------------------
 \subsection{Resultados}
-% VERIFICAR: los comentarios de cada consulta describen la corrida de prueba.
 
 \subsubsection{Consulta 1}
 \begin{figure}[H]\centering\grafico{C1_tiempos.png}{0.82}\caption{C1: tiempo de ejecución por escala}\end{figure}
-El plan A apenas mejora porque el join con \tb{paquete} sigue leyendo la tabla completa. El plan B (cubrientes) es el mejor: alrededor de 3,5 veces más rápido en la escala de un millón. % VERIFICAR
+El plan A apenas mejora (1,25 veces) porque el join con \tb{paquete} sigue leyendo la tabla completa. El plan B (cubrientes) es el mejor: 4 veces más rápido en la escala de un millón (de 110 a 27\,ms).
 
 \subsubsection{Consulta 2}
 \begin{figure}[H]\centering\grafico{C2_tiempos.png}{0.82}\caption{C2: tiempo de ejecución por escala}\end{figure}
-El índice compuesto (plan A) gana: resuelve el filtro por nest y por fecha juntos, y es unas 4 veces más rápido. El plan B queda detrás aunque usa un índice siete veces más grande. % VERIFICAR
+El índice compuesto (plan A) gana: resuelve el filtro por nest (a través de sus rutas) y por fecha juntos, y es 2,2 veces más rápido en la escala de un millón (4 veces en la de 100\,000). El plan B queda detrás (1,2 veces) aunque sus índices ocupan siete veces más (206\,MB frente a 30\,MB).
 
 \subsubsection{Consulta 3}
 \begin{figure}[H]\centering\grafico{C3_tiempos.png}{0.82}\caption{C3: tiempo de ejecución por escala}\end{figure}
-Es la mayor mejora del experimento: con el índice parcial, C3 pasa de leer millones de lecturas a leer unas pocas decenas. El índice parcial ocupa menos de 1\,MB frente a los cerca de 100\,MB del B+ completo sobre la temperatura. % VERIFICAR
+Es la mayor mejora del experimento: con el índice parcial, C3 pasa de 127\,ms a 2,9\,ms, unas 44 veces más rápida. Sin índices, PostgreSQL recorre las 4,85 millones de lecturas y descarta casi todas; con el índice parcial solo visita las 787 lecturas que superan los 60\,°C en el mes. El índice parcial ocupa 0,4\,MB frente a los 104\,MB del B+ completo sobre la temperatura (plan A, 5,8 veces más rápido).
 
 \subsubsection{Consulta 4}
 \begin{figure}[H]\centering\grafico{C4_tiempos.png}{0.82}\caption{C4: tiempo de ejecución por escala}\end{figure}
-El B+ en la fecha mejora unas 4 veces. El BRIN no mejora porque los datos no están ordenados físicamente por fecha, como se anticipó en la sección~\ref{sec:planes}. % VERIFICAR
+El B+ en la fecha mejora 2,9 veces en la escala de un millón (5,2 veces en la de 100\,000). El BRIN no mejora (1,05 veces) porque los datos no están ordenados físicamente por fecha, como se anticipó en la sección~\ref{sec:planes}.
 
 \subsubsection{Consulta 5}
 \begin{figure}[H]\centering\grafico{C5_tiempos.png}{0.82}\caption{C5: tiempo de ejecución por escala}\end{figure}
-Los índices sobre \tb{paquete} mejoran alrededor de 2 veces con la configuración por defecto. El ajuste de \texttt{random\_page\_cost} lleva la mejora a unas 5 veces, porque el planificador pasa a buscar los vuelos por su llave primaria. % VERIFICAR
+Los índices sobre \tb{paquete} mejoran entre 2,3 y 2,7 veces con la configuración por defecto. El ajuste de \texttt{random\_page\_cost} lleva la mejora a 5,7 veces (de 113 a 20\,ms), porque el planificador pasa a buscar los vuelos por su llave primaria.
 
 % ---------------------------------------------------------------------
 \subsection{Análisis y Discusión}
 
 \begin{figure}[H]\centering\grafico{mejora_escala_mayor.png}{0.85}\caption{Mejora de cada plan respecto de la ejecución sin índices en la escala de un millón}\end{figure}
 
-\paragraph{La escala decide si el índice importa.} Con 1\,000 vuelos todas las consultas tardan menos de 1\,ms y leer la tabla completa es tan barato como usar un índice. En algunas, el planificador incluso prefiere ignorarlo. La diferencia aparece desde 100\,000 vuelos y crece con el tamaño: el tiempo sin índices crece de forma casi proporcional a $N$, porque hay que leer toda la tabla, mientras que con un índice selectivo crece mucho más lento, porque solo se leen las filas que cumplen el filtro.
+\paragraph{La escala decide si el índice importa.} Con 1\,000 vuelos todas las consultas tardan menos de 1\,ms y leer la tabla completa es tan barato como usar un índice. En algunas, el planificador incluso prefiere ignorarlo. La diferencia aparece desde 100\,000 vuelos y crece con el tamaño: el tiempo sin índices crece de forma casi proporcional a $N$, porque hay que leer toda la tabla, mientras que con un índice selectivo crece mucho más lento, porque solo se leen las filas que cumplen el filtro. Las mejoras relativas de la escala menor (por ejemplo, 17 veces en C3) corresponden a diferencias de centésimas de milisegundo, que no se notan en la práctica.
 
 \paragraph{La selectividad manda.} El mayor beneficio está en C3, que se queda con menos del 1\,\% de las filas. En C1 y C5, aunque el filtro es selectivo en una tabla, el join obliga a leer otra tabla grande; ahí el índice mejora menos, salvo que sea \emph{cubriente} o que el planificador se anime a usar las llaves primarias.
 
 \paragraph{El tipo de índice importa tanto como la columna.} Sobre la misma tabla:
 \begin{itemize}
-\item El índice parcial de C3 es cien veces más pequeño que el B+ completo y más rápido.
+\item El índice parcial de C3 es más de doscientas veces más pequeño que el B+ completo (0,4 frente a 104\,MB) y más rápido.
 \item El compuesto de C2 supera a dos índices simples.
 \item Los cubrientes (\texttt{INCLUDE}) permiten \emph{Index Only Scan}.
 \item El BRIN es el más barato de mantener, pero solo funciona con datos ordenados físicamente. En \tb{telemetria\_bateria}, cuyas lecturas sí llegan en orden de tiempo en producción, sería una buena opción para filtrar por \at{marca\_tiempo}.
 \end{itemize}
 
-\paragraph{El planificador también se configura.} \texttt{random\_page\_cost = 1.1}, el valor recomendado para SSD, mejoró C5 más que cualquier índice. Sin embargo, empeoró ligeramente C4. Es un ajuste global, no una solución por consulta: se debe probar con la carga real antes de cambiarlo en producción.
+\paragraph{El planificador también se configura.} \texttt{random\_page\_cost = 1.1}, el valor recomendado para SSD, mejoró C5 más que cualquier índice (de 2,7 a 5,7 veces). En las demás consultas su efecto fue pequeño: C3 pasó de 44 a 53 veces, y en C1, C2 y C4 la diferencia fue menor al 3\,\%, dentro de la variación entre corridas. Es un ajuste global, no una solución por consulta: se debe probar con la carga real antes de cambiarlo en producción.
 
 \paragraph{Los índices tienen costo.}
 \entrada{tablas_latex/tabla_actualizacion.tex}
 \begin{figure}[H]\centering\grafico{costo_actualizacion.png}{0.9}\caption{Costo de mantener índices en la escala de un millón}\end{figure}
-Cada índice que contiene la columna modificada se actualiza en cada escritura. Con todos los índices del experimento, insertar telemetría cuesta alrededor de 50\,\% más y actualizar paquetes más del doble. % VERIFICAR
+Cada índice que contiene la columna modificada se actualiza en cada escritura. Con todos los índices del experimento, actualizar paquetes cuesta casi el doble (de 10,8 a 19,6\,ms) e insertar telemetría entre 1,8 y 2,7 veces más (de 64 a 175\,ms en la escala de un millón). Cada tipo de índice por separado cuesta poco: el BRIN casi nada, y el B+ o el parcial sobre la telemetría entre 15 y 20\,\% más.
 En \tb{telemetria\_bateria}, la tabla de mayor crecimiento y con un objetivo de inserción de menos de 10\,ms por lectura (sección 1.5.4), conviene mantener pocos índices y preferir los parciales o BRIN. Por eso, para la base final se recomienda el plan B de C1 y C3, el A de C2 y C4, y el B de C5, y no crear todos a la vez.
 
 \paragraph{Pregunta extra: ¿qué pasa por encima del millón?} Con la configuración actual, el tiempo sin índices crece casi linealmente con $N$. Con 10 millones de vuelos (unos 50 millones de lecturas), las consultas sin índices pasarían de cientos de milisegundos a varios segundos y los índices B+ seguirían siendo útiles, porque su altura crece de forma logarítmica: un nivel más cada vez que los datos se multiplican por cientos. Aparecen, sin embargo, otros límites:
@@ -584,12 +583,55 @@ La arquitectura cliente-servidor con un solo PostgreSQL alcanza holgadamente par
 \item Se implementó en PostgreSQL el modelo normalizado del Hito 1. Todas sus reglas quedaron garantizadas por la base de datos: las de una fila con CHECK, el no solapamiento de baterías con EXCLUDE y las que cruzan tablas con 17 triggers. Además, 19 pruebas de operaciones inválidas y 18 verificaciones sobre los datos generados confirman que se cumplen.
 \item El generador produce datos coherentes con todas las reglas en las cuatro escalas, con la proporción de paquetes por vuelo del Hito 1, y carga un millón de vuelos en pocos minutos con \texttt{COPY}.
 \item Los procedimientos almacenados y los roles con privilegios mínimos implementan el flujo real de un envío. Cada tipo de usuario solo puede hacer lo que le corresponde.
-\item En el experimento, los índices no aportan nada con 1\,000 registros y son decisivos desde 100\,000. La mejora depende de la selectividad del filtro y del tipo de índice, más que de indexar ``la columna del WHERE'': el índice parcial, el compuesto y los cubrientes superaron a los B+ simples, y el BRIN no sirvió con datos desordenados.
+\item En el experimento, los índices no aportan nada apreciable con 1\,000 registros (todas las consultas tardan menos de 0,4\,ms) y son decisivos desde 100\,000. La mejora depende de la selectividad del filtro y del tipo de índice, más que de indexar ``la columna del WHERE'': el índice parcial, el compuesto y los cubrientes superaron a los B+ simples, y el BRIN no sirvió con datos desordenados.
 \item Los índices no son gratis: encarecen las escrituras. Para SkyNest, cuya tabla de telemetría recibe inserciones continuas, la estrategia correcta es un conjunto pequeño de índices elegidos por consulta, más el particionamiento por fecha si el volumen supera el millón de vuelos.
 \end{enumerate}
 
 % =====================================================================
 \section{Anexos}
+
+\subsection{MVP web}
+\label{sec:mvp}
+Como extra se desarrolló una aplicación web conectada a PostgreSQL (FastAPI en el servidor y HTML, CSS y JavaScript sin frameworks en el cliente). La web no tiene lógica de negocio propia: llama a las vistas, los procedimientos almacenados y las cinco consultas de \archivo{sql/}, y la base valida todo con sus triggers. Un selector en la barra superior cambia la base consultada (1\,000, 10\,000, 100\,000 o 1\,000\,000 de vuelos), de modo que se ve en vivo el efecto de la escala. Se ejecuta con \texttt{.venv/bin/uvicorn web.app:app}.
+
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{@{}lXX@{}}
+\toprule
+Pantalla & Qué muestra & Qué usa de la base \\
+\midrule
+Panel & Indicadores del mes: entregas, tasa de éxito, minutos promedio, vuelos por semana, distritos con más entregas, alertas de temperatura y licencias por vencer & \tb{vuelo}, \tb{paquete}, \tb{telemetria\_bateria}, vista \at{v\_licencias\_por\_vencer} \\
+Rastrear & Estado de un paquete por su código de tracking y su línea de tiempo & función \at{fn\_rastrear\_paquete} (\texttt{SECURITY DEFINER}) \\
+Despacho & Flujo de un envío: registrar paquete, programar vuelo, asignar, despegar, telemetría y aterrizar; botones que provocan violaciones de reglas & procedimientos \at{sp\_registrar\_paquete}, \at{sp\_programar\_vuelo}, \at{sp\_asignar\_paquete} y demás; triggers de \archivo{sql/03_triggers.sql} \\
+Laboratorio & Las cinco consultas sin índices o con los planes A y B: resultado, tiempo, índices usados y plan de ejecución & \archivo{sql/07_consultas.sql} y \archivo{sql/08_indices.sql} \\
+\bottomrule
+\end{tabularx}
+\caption{Pantallas del MVP web}
+\end{table}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.85\linewidth,height=0.8\textheight,keepaspectratio]{capturas/01_panel.png}
+\caption{Panel con la base de 1\,000\,000 de vuelos (octubre de 2026)}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.85\linewidth,height=0.8\textheight,keepaspectratio]{capturas/02_rastrear.png}
+\caption{Rastreo de un paquete con \at{fn\_rastrear\_paquete}}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.85\linewidth,height=0.8\textheight,keepaspectratio]{capturas/03_despacho.png}
+\caption{Despacho: paquete registrado, vuelo programado y asignación. En el registro de operaciones se ve el rechazo del trigger de R15 (paquete con sobrepeso).}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.85\linewidth,height=0.8\textheight,keepaspectratio]{capturas/04_laboratorio.png}
+\caption{Laboratorio: C3 con el plan B y la comparación de las tres condiciones en la base de 1\,000\,000 de vuelos}
+\end{figure}
+
+\begin{figure}[H]\centering
+\includegraphics[width=0.85\linewidth,height=0.8\textheight,keepaspectratio]{capturas/05_laboratorio_plan.png}
+\caption{Laboratorio: plan de ejecución de C3 con el índice parcial}
+\end{figure}
 
 \subsection{Video de la experimentación}
 Video de la ejecución de las cinco consultas en la base de 1\,000\,000 de vuelos, sin índices y con índices: \url{PEGAR-ENLACE-DEL-VIDEO}.

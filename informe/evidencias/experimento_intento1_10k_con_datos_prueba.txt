@@ -1,0 +1,107 @@
+Matplotlib is building the font cache; this may take a moment.
+=== skynest_1k ===
+    1k C1 sin media      0.36 ms
+    1k C1 A   media      0.28 ms   (índices: 0.1 MB, creados en 0.0 s)
+    1k C1 B   media      0.19 ms   (índices: 0.1 MB, creados en 0.0 s)
+    1k C2 sin media      0.27 ms
+    1k C2 A   media      0.24 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C2 B   media      0.18 ms   (índices: 0.2 MB, creados en 0.0 s)
+    1k C3 sin media      0.29 ms
+    1k C3 A   media      0.02 ms   (índices: 0.1 MB, creados en 0.0 s)
+    1k C3 B   media      0.02 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C4 sin media      0.18 ms
+    1k C4 A   media      0.11 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C4 B   media      0.19 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C5 sin media      0.26 ms
+    1k C5 A   media      0.13 ms   (índices: 0.0 MB, creados en 0.0 s)
+    1k C5 B   media      0.13 ms   (índices: 0.1 MB, creados en 0.0 s)
+    1k telemetria_insert  sin       media     61.78 ms
+    1k telemetria_insert  btree     media     73.98 ms
+    1k telemetria_insert  parcial   media     87.21 ms
+    1k telemetria_insert  brin      media     74.07 ms
+    1k telemetria_insert  todos     media    201.23 ms
+    1k paquete_update     sin       media      8.19 ms
+    1k paquete_update     btree     media      9.90 ms
+    1k paquete_update     compuesto media     10.37 ms
+    1k paquete_update     hash      media      8.69 ms
+    1k paquete_update     todos     media     13.82 ms
+=== skynest_10k ===
+   10k C1 sin media      2.43 ms
+   10k C1 A   media      1.82 ms   (índices: 0.5 MB, creados en 0.1 s)
+   10k C1 B   media      0.90 ms   (índices: 0.9 MB, creados en 0.0 s)
+   10k C2 sin media      1.06 ms
+   10k C2 A   media      0.39 ms   (índices: 0.3 MB, creados en 0.0 s)
+   10k C2 B   media      0.58 ms   (índices: 2.1 MB, creados en 0.0 s)
+   10k C3 sin media      2.61 ms
+   10k C3 A   media      0.08 ms   (índices: 1.1 MB, creados en 0.0 s)
+   10k C3 B   media      0.05 ms   (índices: 0.0 MB, creados en 0.0 s)
+   10k C4 sin media      1.51 ms
+   10k C4 A   media      0.56 ms   (índices: 0.2 MB, creados en 0.0 s)
+   10k C4 B   media      1.28 ms   (índices: 0.0 MB, creados en 0.0 s)
+   10k C5 sin media      2.36 ms
+   10k C5 A   media      1.54 ms   (índices: 0.3 MB, creados en 0.0 s)
+   10k C5 B   media      0.86 ms   (índices: 1.0 MB, creados en 0.0 s)
+   10k telemetria_insert  sin       media     62.29 ms
+   10k telemetria_insert  btree     media     74.14 ms
+   10k telemetria_insert  parcial   media     74.14 ms
+   10k telemetria_insert  brin      media     61.22 ms
+   10k telemetria_insert  todos     media     97.45 ms
+   10k paquete_update     sin       media      9.91 ms
+   10k paquete_update     btree     media     12.10 ms
+   10k paquete_update     compuesto media     12.24 ms
+   10k paquete_update     hash      media     11.54 ms
+   10k paquete_update     todos     media     18.11 ms
+=== skynest_100k ===
+  100k C1 sin media     13.45 ms
+  100k C1 A   media     18.91 ms   (índices: 5.0 MB, creados en 0.1 s)
+  100k C1 B   media      5.51 ms   (índices: 8.9 MB, creados en 0.1 s)
+  100k C2 sin media      9.25 ms
+  100k C2 A   media      2.22 ms   (índices: 3.0 MB, creados en 0.0 s)
+  100k C2 B   media      3.86 ms   (índices: 20.9 MB, creados en 0.3 s)
+  100k C3 sin media     14.18 ms
+  100k C3 A   media      0.72 ms   (índices: 10.4 MB, creados en 0.3 s)
+  100k C3 B   media      0.24 ms   (índices: 0.1 MB, creados en 0.0 s)
+  100k C4 sin media      9.96 ms
+  100k C4 A   media      1.99 ms   (índices: 2.1 MB, creados en 0.0 s)
+  100k C4 B   media     10.47 ms   (índices: 0.0 MB, creados en 0.0 s)
+  100k C5 sin media     17.92 ms
+  100k C5 A   media     10.37 ms   (índices: 2.8 MB, creados en 0.1 s)
+  100k C5 B   media      9.07 ms   (índices: 9.6 MB, creados en 0.4 s)
+  100k telemetria_insert  sin       media     61.19 ms
+  100k telemetria_insert  btree     media     77.39 ms
+  100k telemetria_insert  parcial   media     76.67 ms
+  100k telemetria_insert  brin      media     66.86 ms
+  100k telemetria_insert  todos     media    117.62 ms
+  100k paquete_update     sin       media     10.25 ms
+  100k paquete_update     btree     media     12.38 ms
+  100k paquete_update     compuesto media     13.23 ms
+  100k paquete_update     hash      media     10.81 ms
+  100k paquete_update     todos     media     19.09 ms
+=== skynest_1m ===
+    1m C1 sin media    118.45 ms
+    1m C1 A   media     89.23 ms   (índices: 47.0 MB, creados en 1.5 s)
+    1m C1 B   media     27.26 ms   (índices: 88.2 MB, creados en 2.5 s)
+    1m C2 sin media     51.16 ms
+    1m C2 A   media     22.76 ms   (índices: 29.6 MB, creados en 0.9 s)
+    1m C2 B   media     37.74 ms   (índices: 205.8 MB, creados en 4.7 s)
+    1m C3 sin media    127.16 ms
+    1m C3 A   media     11.36 ms   (índices: 104.1 MB, creados en 5.3 s)
+    1m C3 B   media      2.55 ms   (índices: 0.4 MB, creados en 0.2 s)
+    1m C4 sin media     46.13 ms
+    1m C4 A   media     20.97 ms   (índices: 18.2 MB, creados en 0.5 s)
+    1m C4 B   media     42.31 ms   (índices: 0.0 MB, creados en 0.1 s)
+    1m C5 sin media    126.41 ms
+    1m C5 A   media     57.68 ms   (índices: 27.9 MB, creados en 1.0 s)
+    1m C5 B   media     44.23 ms   (índices: 96.1 MB, creados en 3.6 s)
+    1m telemetria_insert  sin       media     78.00 ms
+    1m telemetria_insert  btree     media     79.89 ms
+    1m telemetria_insert  parcial   media    109.43 ms
+    1m telemetria_insert  brin      media     66.49 ms
+    1m telemetria_insert  todos     media    122.60 ms
+    1m paquete_update     sin       media     11.85 ms
+    1m paquete_update     btree     media     37.03 ms
+    1m paquete_update     compuesto media     16.19 ms
+    1m paquete_update     hash      media     13.87 ms
+    1m paquete_update     todos     media     19.50 ms
+Experimento terminado en 186 s
+Resúmenes, tablas LaTeX y gráficos en /Users/giuseppedelnegro/Downloads/01 UTEC/2026-2/Base de Datos 1/Proyecto Final Hito 2/informe/resultados

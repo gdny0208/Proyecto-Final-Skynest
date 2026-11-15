@@ -1,0 +1,41 @@
+escala,consulta,plan,creacion_s,tamano_mb,indices
+1k,C1,A,0.002,0.09,ix_c1a_vuelo_despegue | ix_c1a_paquete_vuelo
+1k,C1,B,0.002,0.12,ix_c1b_vuelo_despegue_cov | ix_c1b_paquete_vuelo_cov
+1k,C2,A,0.001,0.05,ix_c2a_vuelo_ruta_despegue
+1k,C2,B,0.002,0.24,ix_c2b_vuelo_despegue | ix_c2b_telemetria_cov
+1k,C3,A,0.002,0.12,ix_c3a_telemetria_temp
+1k,C3,B,0.001,0.02,ix_c3b_telemetria_alertas
+1k,C4,A,0.001,0.04,ix_c4a_vuelo_despegue
+1k,C4,B,0.001,0.02,ix_c4b_vuelo_despegue_brin
+1k,C5,A,0.001,0.05,ix_c5a_paquete_entrega
+1k,C5,B,0.002,0.12,ix_c5b_paquete_express_cov
+10k,C1,A,0.009,0.53,ix_c1a_vuelo_despegue | ix_c1a_paquete_vuelo
+10k,C1,B,0.014,0.92,ix_c1b_vuelo_despegue_cov | ix_c1b_paquete_vuelo_cov
+10k,C2,A,0.004,0.32,ix_c2a_vuelo_ruta_despegue
+10k,C2,B,0.021,2.12,ix_c2b_vuelo_despegue | ix_c2b_telemetria_cov
+10k,C3,A,0.020,1.05,ix_c3a_telemetria_temp
+10k,C3,B,0.004,0.02,ix_c3b_telemetria_alertas
+10k,C4,A,0.003,0.23,ix_c4a_vuelo_despegue
+10k,C4,B,0.002,0.02,ix_c4b_vuelo_despegue_brin
+10k,C5,A,0.006,0.30,ix_c5a_paquete_entrega
+10k,C5,B,0.019,0.98,ix_c5b_paquete_express_cov
+100k,C1,A,0.062,5.00,ix_c1a_vuelo_despegue | ix_c1a_paquete_vuelo
+100k,C1,B,0.096,8.86,ix_c1b_vuelo_despegue_cov | ix_c1b_paquete_vuelo_cov
+100k,C2,A,0.033,3.00,ix_c2a_vuelo_ruta_despegue
+100k,C2,B,0.460,20.88,ix_c2b_vuelo_despegue | ix_c2b_telemetria_cov
+100k,C3,A,0.358,10.42,ix_c3a_telemetria_temp
+100k,C3,B,0.023,0.06,ix_c3b_telemetria_alertas
+100k,C4,A,0.031,2.10,ix_c4a_vuelo_despegue
+100k,C4,B,0.009,0.02,ix_c4b_vuelo_despegue_brin
+100k,C5,A,0.042,2.81,ix_c5a_paquete_entrega
+100k,C5,B,0.237,9.62,ix_c5b_paquete_express_cov
+1m,C1,A,1.268,46.96,ix_c1a_vuelo_despegue | ix_c1a_paquete_vuelo
+1m,C1,B,3.284,88.17,ix_c1b_vuelo_despegue_cov | ix_c1b_paquete_vuelo_cov
+1m,C2,A,0.699,29.62,ix_c2a_vuelo_ruta_despegue
+1m,C2,B,6.163,205.78,ix_c2b_vuelo_despegue | ix_c2b_telemetria_cov
+1m,C3,A,4.445,104.09,ix_c3a_telemetria_temp
+1m,C3,B,0.283,0.41,ix_c3b_telemetria_alertas
+1m,C4,A,0.630,18.18,ix_c4a_vuelo_despegue
+1m,C4,B,0.094,0.02,ix_c4b_vuelo_despegue_brin
+1m,C5,A,0.838,27.94,ix_c5a_paquete_entrega
+1m,C5,B,4.137,96.14,ix_c5b_paquete_express_cov

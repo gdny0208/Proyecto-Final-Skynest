@@ -1,0 +1,177 @@
+BEGIN
+================ PARTE 1. FLUJO COMPLETO DE UN ENVÍO ================
+--- 1. Registrar un cliente persona
+ p_id_cliente 
+--------------
+          102
+
+--- 2. Elegir una ruta de San Isidro a un distrito no restringido
+ id_ruta | ubigeo_destino |  distrito  
+---------+----------------+------------
+      21 | 150131         | San Isidro
+
+--- 3. Registrar un paquete (genera el código de tracking)
+ p_codigo_tracking 
+-------------------
+ SKY000001532
+
+--- 4. Programar el vuelo (elige drone, batería y operador)
+ p_id_vuelo 
+------------
+       1001
+
+ id_vuelo | drone | bateria | operador |   estado   
+----------+-------+---------+----------+------------
+     1001 |    12 |     193 |        5 | programado
+
+--- 5. Asignar el paquete al vuelo
+CALL
+--- 6. Despegar: paquete -> en_ruta, drone -> en_vuelo (automático)
+CALL
+ paquete |  drone   
+---------+----------
+ en_ruta | en_vuelo
+
+--- 7. Registrar una lectura de telemetría durante el vuelo
+CALL
+--- 8. Aterrizar: paquete -> entregado, drone -> cargando, suma horas y ciclos (automático)
+CALL
+  paquete  |    fecha_entrega    |  drone   | horas_antes | horas_despues | ciclos_antes | ciclos_despues 
+-----------+---------------------+----------+-------------+---------------+--------------+----------------
+ entregado | 2026-11-20 10:16:00 | cargando |       39.42 |         39.67 |           17 |             18
+
+--- 9. Cancelar un vuelo devuelve sus paquetes a "registrado"
+UPDATE 1
+ p_codigo_tracking 
+-------------------
+ SKY000001533
+
+ p_id_vuelo 
+------------
+       1002
+
+CALL
+CALL
+ codigo_tracking |   estado   | id_vuelo 
+-----------------+------------+----------
+ SKY000001533    | registrado |         
+
+
+================ PARTE 2. CADA REGLA RECHAZA LO INVÁLIDO ================
+--- (i) R16: el mismo cliente como persona y como empresa
+SAVEPOINT
+psql:sql/04_flujo_prueba.sql:79: ERROR:  R16: el cliente 102 ya está registrado como persona
+ROLLBACK
+--- (i) R16: un cliente sin subclase (se revisa al cerrar la transacción)
+SAVEPOINT
+INSERT 0 1
+psql:sql/04_flujo_prueba.sql:85: ERROR:  R16: el cliente 103 debe ser persona o empresa
+ROLLBACK
+--- (ii) R15: paquete más pesado que la carga útil del drone
+SAVEPOINT
+ p_id_vuelo 
+------------
+       1003
+
+ p_codigo_tracking 
+-------------------
+ SKY000001534
+
+psql:sql/04_flujo_prueba.sql:97: ERROR:  R15: el vuelo 1003 llevaría 31.00 kg y la carga útil del modelo es 30.00 kg
+ROLLBACK
+--- (v) R14: paquete a otro distrito que la ruta del vuelo
+SAVEPOINT
+ p_id_vuelo 
+------------
+       1004
+
+ p_codigo_tracking 
+-------------------
+ SKY000001535
+
+psql:sql/04_flujo_prueba.sql:107: ERROR:  R14: el paquete va al distrito 150142 pero la ruta del vuelo 1004 llega a 150131
+ROLLBACK
+--- Asignar un paquete a un vuelo que ya aterrizó
+SAVEPOINT
+ p_codigo_tracking 
+-------------------
+ SKY000001536
+
+psql:sql/04_flujo_prueba.sql:115: ERROR:  No se puede asignar el paquete al vuelo 1001 porque está completado
+ROLLBACK
+--- (vi) R10: drone de otro nest que el de la ruta
+SAVEPOINT
+psql:sql/04_flujo_prueba.sql:124: ERROR:  R10: el drone 1 tiene base en el nest 1 y la ruta 21 sale del nest 2
+ROLLBACK
+--- (iii) R11: vuelo después del vencimiento de la licencia del operador
+SAVEPOINT
+UPDATE 1
+psql:sql/04_flujo_prueba.sql:131: ERROR:  R11: la licencia del operador 5 vence el 2027-08-05 (vuelo del 2030-01-01)
+ROLLBACK
+--- (iii) R11: operador sin autorización para ese modelo y distrito
+SAVEPOINT
+UPDATE 1
+DELETE 1
+psql:sql/04_flujo_prueba.sql:141: ERROR:  R11: el operador 5 no tiene autorización vigente para el modelo 1 en el distrito 150131
+ROLLBACK
+--- (iv) R9: vuelo a distrito restringido sin permiso
+SAVEPOINT
+UPDATE 1
+psql:sql/04_flujo_prueba.sql:151: ERROR:  R9: el distrito 150101 es restringido y el vuelo no tiene permiso
+ROLLBACK
+--- (iv) R9: con permiso de OTRO distrito
+SAVEPOINT
+UPDATE 1
+psql:sql/04_flujo_prueba.sql:161: ERROR:  R9: el permiso 8 es del distrito 070101, no de 150101
+ROLLBACK
+--- R12 (automático): bajar la salud a 65 % pasa la batería a "degradada"
+SAVEPOINT
+UPDATE 1
+ id_bateria | salud_pct |  estado   
+------------+-----------+-----------
+        193 |     65.00 | degradada
+
+--- R12: y ya no se puede usar en un vuelo nuevo
+UPDATE 1
+psql:sql/04_flujo_prueba.sql:171: ERROR:  R12: la batería 193 no está operativa
+ROLLBACK
+--- R10: drone que no está disponible (en mantenimiento)
+SAVEPOINT
+UPDATE 1
+psql:sql/04_flujo_prueba.sql:178: ERROR:  R10: el drone 12 no está disponible (estado: mantenimiento)
+ROLLBACK
+--- Transición inválida: un vuelo completado no vuelve a "en_curso"
+SAVEPOINT
+psql:sql/04_flujo_prueba.sql:183: ERROR:  Transición de estado no permitida para el vuelo 1001: completado -> en_curso
+ROLLBACK
+--- (viii) R17: lectura de telemetría después del aterrizaje
+SAVEPOINT
+psql:sql/04_flujo_prueba.sql:188: ERROR:  R17: la lectura 2026-11-20 11:00:00 está fuera del vuelo 1001 (2026-11-20 10:01:00 a 2026-11-20 10:16:00)
+ROLLBACK
+--- (ix) R2: agregar un drone a un nest que ya está lleno
+SAVEPOINT
+UPDATE 1
+psql:sql/04_flujo_prueba.sql:195: ERROR:  R2: el nest 6 ya tiene 10 drones y su capacidad es 10
+ROLLBACK
+--- (ix) R2: bajar la capacidad de un nest por debajo de sus drones
+SAVEPOINT
+psql:sql/04_flujo_prueba.sql:200: ERROR:  R2: el nest 6 tiene 10 drones; no se puede bajar su capacidad a 3
+ROLLBACK
+--- (x) R6: ruta con un solo punto (se revisa al cerrar la transacción)
+SAVEPOINT
+INSERT 0 1
+INSERT 0 1
+psql:sql/04_flujo_prueba.sql:208: ERROR:  R6: la ruta 601 debe tener al menos 2 puntos (despegue y entrega)
+ROLLBACK
+--- R6: punto de ruta más alto que la altitud máxima del distrito destino
+SAVEPOINT
+psql:sql/04_flujo_prueba.sql:213: ERROR:  R6: altitud 200.0 m supera la máxima del distrito destino (120.0 m)
+ROLLBACK
+--- (vii) R12: misma batería en dos vuelos que se solapan (EXCLUDE)
+SAVEPOINT
+UPDATE 1
+psql:sql/04_flujo_prueba.sql:221: ERROR:  conflicting key value violates exclusion constraint "ex_vuelo_bateria_solape"
+ROLLBACK
+ROLLBACK
+
+=== Fin: transacción deshecha, la base queda como estaba ===

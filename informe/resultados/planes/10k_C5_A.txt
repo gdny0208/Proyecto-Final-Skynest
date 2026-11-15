@@ -1,0 +1,48 @@
+Sort  (cost=778.82..778.95 rows=50 width=92) (actual time=1.288..1.289 rows=33 loops=1)
+  Sort Key: (round(((100.0 * (count(*) FILTER (WHERE ((EXTRACT(epoch FROM (p.fecha_entrega - v.despegue)) / '60'::numeric) > (r.duracion_est_min)::numeric)))::numeric) / (count(*))::numeric), 1)) DESC, (count(*)) DESC
+  Sort Method: quicksort  Memory: 28kB
+  Buffers: shared hit=406
+  ->  GroupAggregate  (cost=768.72..777.41 rows=50 width=92) (actual time=1.160..1.281 rows=33 loops=1)
+        Group Key: d.nombre
+        Buffers: shared hit=406
+        ->  Sort  (cost=768.72..769.18 rows=183 width=30) (actual time=1.156..1.161 rows=211 loops=1)
+              Sort Key: d.nombre
+              Sort Method: quicksort  Memory: 42kB
+              Buffers: shared hit=406
+              ->  Hash Join  (cost=454.55..761.84 rows=183 width=30) (actual time=0.231..1.022 rows=211 loops=1)
+                    Hash Cond: (p.ubigeo_destino = d.ubigeo)
+                    Buffers: shared hit=406
+                    ->  Hash Join  (cost=452.42..759.19 rows=183 width=25) (actual time=0.223..0.994 rows=211 loops=1)
+                          Hash Cond: (v.id_ruta = r.id_ruta)
+                          Buffers: shared hit=405
+                          ->  Hash Join  (cost=431.92..738.21 rows=183 width=27) (actual time=0.160..0.914 rows=211 loops=1)
+                                Hash Cond: (v.id_vuelo = p.id_vuelo)
+                                Buffers: shared hit=398
+                                ->  Seq Scan on vuelo v  (cost=0.00..242.00 rows=10000 width=16) (actual time=0.001..0.284 rows=10000 loops=1)
+                                      Buffers: shared hit=142
+                                ->  Hash  (cost=429.63..429.63 rows=183 width=19) (actual time=0.156..0.156 rows=211 loops=1)
+                                      Buckets: 1024  Batches: 1  Memory Usage: 19kB
+                                      Buffers: shared hit=256
+                                      ->  Bitmap Heap Scan on paquete p  (cost=14.80..429.63 rows=183 width=19) (actual time=0.037..0.142 rows=211 loops=1)
+                                            Recheck Cond: ((fecha_entrega >= '2026-08-01 00:00:00'::timestamp without time zone) AND (fecha_entrega < '2026-09-01 00:00:00'::timestamp without time zone))
+                                            Filter: (((prioridad)::text = 'express'::text) AND ((estado)::text = 'entregado'::text))
+                                            Rows Removed by Filter: 448
+                                            Heap Blocks: exact=252
+                                            Buffers: shared hit=256
+                                            ->  Bitmap Index Scan on ix_c5a_paquete_entrega  (cost=0.00..14.76 rows=647 width=0) (actual time=0.024..0.024 rows=659 loops=1)
+                                                  Index Cond: ((fecha_entrega >= '2026-08-01 00:00:00'::timestamp without time zone) AND (fecha_entrega < '2026-09-01 00:00:00'::timestamp without time zone))
+                                                  Buffers: shared hit=4
+                          ->  Hash  (cost=13.00..13.00 rows=600 width=6) (actual time=0.062..0.062 rows=600 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 32kB
+                                Buffers: shared hit=7
+                                ->  Seq Scan on ruta_vuelo r  (cost=0.00..13.00 rows=600 width=6) (actual time=0.001..0.034 rows=600 loops=1)
+                                      Buffers: shared hit=7
+                    ->  Hash  (cost=1.50..1.50 rows=50 width=19) (actual time=0.007..0.007 rows=50 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                          Buffers: shared hit=1
+                          ->  Seq Scan on distrito d  (cost=0.00..1.50 rows=50 width=19) (actual time=0.001..0.003 rows=50 loops=1)
+                                Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=22
+Planning Time: 0.130 ms
+Execution Time: 1.302 ms

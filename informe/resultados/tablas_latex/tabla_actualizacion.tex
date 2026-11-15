@@ -1,0 +1,23 @@
+\begin{table}[H]
+\centering
+\small
+\caption{Costo de mantener índices: INSERT de 10000 lecturas y UPDATE de 1000 paquetes (ms, media de 10 corridas)}
+\label{tab:actualizacion}
+\begin{tabular}{llrrrr}
+\toprule
+Operación & Índices & 1 000 & 10 000 & 100 000 & 1 000 000 \\
+\midrule
+INSERT telemetría & sin & 58,28 & 58,88 & 60,97 & 63,77 \\
+INSERT telemetría & btree & 71,39 & 70,40 & 74,15 & 76,84 \\
+INSERT telemetría & parcial & 67,21 & 70,96 & 71,53 & 74,67 \\
+INSERT telemetría & brin & 58,32 & 61,61 & 62,71 & 65,13 \\
+INSERT telemetría & todos & 112 & 130 & 110 & 175 \\
+\midrule
+UPDATE paquete & sin & 7,65 & 9,73 & 10,15 & 10,84 \\
+UPDATE paquete & btree & 8,99 & 11,88 & 12,25 & 12,02 \\
+UPDATE paquete & compuesto & 9,37 & 12,03 & 13,22 & 14,46 \\
+UPDATE paquete & hash & 7,82 & 10,32 & 10,70 & 11,52 \\
+UPDATE paquete & todos & 14,18 & 20,59 & 18,97 & 19,57 \\
+\bottomrule
+\end{tabular}
+\end{table}

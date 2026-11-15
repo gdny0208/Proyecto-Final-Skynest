@@ -204,13 +204,14 @@ La web no tiene lógica de negocio propia: llama a las **vistas**, los **procedi
 | C4 | Vuelos y horas por drone vs promedio de su modelo (ventana) | B+ en `despegue` | BRIN en `despegue` |
 | C5 | Paquetes express entregados con retraso, por distrito | B+ en `fecha_entrega` | B+ compuesto y cubriente |
 
-Resultados de la corrida de prueba en la escala de 1M (los oficiales están en el informe):
-- **C3:** el índice parcial la hace ~15 a 39 veces más rápida y ocupa menos de 1 MB.
-- **C2 y C4:** el B+ compuesto y el B+ simple la hacen ~4 veces más rápida.
-- **C1:** los índices cubrientes, ~3,5 veces.
-- **C5:** ~2 veces, y ~5 veces con `random_page_cost = 1.1`.
+Resultados en la escala de 1M (corrida oficial; detalle en el informe y en `informe/resultados/`):
+- **C3:** el índice parcial la hace ~44 veces más rápida (127 → 2,9 ms) y ocupa 0,4 MB.
+- **C1:** los índices cubrientes, ~4 veces.
+- **C4:** el B+ en la fecha, ~2,9 veces (5 veces en 100k).
+- **C2:** el B+ compuesto, ~2,2 veces (4 veces en 100k).
+- **C5:** ~2,5 veces, y ~5,7 veces con `random_page_cost = 1.1`.
 - **BRIN:** no sirve, porque los vuelos no están guardados físicamente en orden de fecha.
-- **Costo de los índices:** todos juntos hacen ~50 % más lenta la inserción de telemetría.
+- **Costo de los índices:** todos juntos hacen ~1,8 veces más lentas las actualizaciones de paquetes y entre 1,8 y 2,7 veces la inserción de telemetría.
 
 ## 9. Problemas frecuentes
 
