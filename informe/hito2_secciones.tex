@@ -33,7 +33,34 @@ Script & Contenido \\
 \end{table}
 
 % ---------------------------------------------------------------------
-\subsection{Esquemas}
+\subsection{Creación de Tablas en PostgreSQL}
+\label{sec:tablas}
+
+\archivo{sql/01_schema.sql} traduce el diccionario de datos de la sección 3.3 sin cambios de nombres, tipos ni nulos, para que el modelo físico coincida con el relacional. Las decisiones de implementación fueron:
+
+\begin{enumerate}[label=\arabic*.]
+\item \textbf{Restricciones con nombre} (\texttt{pk\_}, \texttt{fk\_}, \texttt{uq\_}, \texttt{ck\_}, \texttt{ex\_}). Así, cada error indica qué regla se violó, por ejemplo \texttt{violates check constraint "ck\_telemetria\_carga"}.
+\item \textbf{Las reglas que solo dependen de una fila se implementaron como CHECK}, no como trigger: los dominios de R18 y las dos condiciones de R19. Además se agregaron tres CHECK que implementan reglas ya existentes:
+  \begin{itemize}
+  \item \texttt{ck\_bateria\_salud\_estado}: una batería con \at{salud\_pct} $< 70$ no puede estar \at{operativa} (R12).
+  \item \texttt{ck\_vuelo\_estado\_tiempos}: el estado del vuelo es coherente con sus horarios. Un vuelo \at{programado} o \at{cancelado} no tiene despegue; uno \at{completado} tiene despegue y aterrizaje.
+  \item \texttt{ck\_paquete\_coordenadas}: la latitud y la longitud de destino se registran juntas o faltan juntas.
+  \end{itemize}
+\item \textbf{R12 (una batería no puede estar en dos vuelos a la vez) con una restricción \texttt{EXCLUDE}} sobre el par (batería, intervalo del vuelo), que requiere la extensión \texttt{btree\_gist}. Solo se aplica cuando el vuelo ya tiene despegue y aterrizaje:
+\begin{lstlisting}[style=sql]
+CONSTRAINT ex_vuelo_bateria_solape EXCLUDE USING gist (
+    id_bateria WITH =,
+    tsrange(despegue, aterrizaje) WITH &&
+) WHERE (despegue IS NOT NULL AND aterrizaje IS NOT NULL)
+\end{lstlisting}
+\item \textbf{ON DELETE}: \texttt{CASCADE} en las entidades débiles (\tb{punto\_ruta}, \tb{telemetria\_bateria}) y en las subclases de cliente; en las demás FK, el valor por defecto (\texttt{NO ACTION}), que impide, por ejemplo, borrar un drone que ya voló.
+\item \textbf{Sin índices adicionales}: solo existen los que PostgreSQL crea por sí mismo para PRIMARY KEY, UNIQUE y EXCLUDE. Las FOREIGN KEY no crean índice en PostgreSQL. Los índices del experimento se definen aparte (sección~\ref{sec:planes}).
+\end{enumerate}
+
+\archivo{sql/01_schema_prueba.sql} inserta un envío válido de punta a punta e intenta 13 violaciones (PK, UNIQUE, FK, CHECK y EXCLUDE). Las 13 son rechazadas con la restricción esperada.
+
+% ---------------------------------------------------------------------
+\subsubsection{Esquemas}
 \label{sec:esquemas}
 
 Un esquema es una carpeta con nombre dentro de la base: agrupa tablas, vistas y funciones, y se le pueden dar permisos como a un todo. La base \texttt{skynest\_<escala>} se organizó en dos esquemas:
@@ -62,33 +89,6 @@ CREATE SCHEMA reportes;
 ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public;
 \end{lstlisting}
 Así, \texttt{SELECT * FROM vuelo} se resuelve como \texttt{skynest.vuelo} y \texttt{v\_peso\_vuelo} como \texttt{reportes.v\_peso\_vuelo}. Los procedimientos \texttt{SECURITY DEFINER} y la función de rastreo fijan su propio \texttt{search\_path}, para que un usuario no pueda engañarlos creando una tabla con el mismo nombre en otro esquema.
-
-% ---------------------------------------------------------------------
-\subsection{Creación de Tablas en PostgreSQL}
-\label{sec:tablas}
-
-\archivo{sql/01_schema.sql} traduce el diccionario de datos de la sección 3.3 sin cambios de nombres, tipos ni nulos, para que el modelo físico coincida con el relacional. Las decisiones de implementación fueron:
-
-\begin{enumerate}[label=\arabic*.]
-\item \textbf{Restricciones con nombre} (\texttt{pk\_}, \texttt{fk\_}, \texttt{uq\_}, \texttt{ck\_}, \texttt{ex\_}). Así, cada error indica qué regla se violó, por ejemplo \texttt{violates check constraint "ck\_telemetria\_carga"}.
-\item \textbf{Las reglas que solo dependen de una fila se implementaron como CHECK}, no como trigger: los dominios de R18 y las dos condiciones de R19. Además se agregaron tres CHECK que implementan reglas ya existentes:
-  \begin{itemize}
-  \item \texttt{ck\_bateria\_salud\_estado}: una batería con \at{salud\_pct} $< 70$ no puede estar \at{operativa} (R12).
-  \item \texttt{ck\_vuelo\_estado\_tiempos}: el estado del vuelo es coherente con sus horarios. Un vuelo \at{programado} o \at{cancelado} no tiene despegue; uno \at{completado} tiene despegue y aterrizaje.
-  \item \texttt{ck\_paquete\_coordenadas}: la latitud y la longitud de destino se registran juntas o faltan juntas.
-  \end{itemize}
-\item \textbf{R12 (una batería no puede estar en dos vuelos a la vez) con una restricción \texttt{EXCLUDE}} sobre el par (batería, intervalo del vuelo), que requiere la extensión \texttt{btree\_gist}. Solo se aplica cuando el vuelo ya tiene despegue y aterrizaje:
-\begin{lstlisting}[style=sql]
-CONSTRAINT ex_vuelo_bateria_solape EXCLUDE USING gist (
-    id_bateria WITH =,
-    tsrange(despegue, aterrizaje) WITH &&
-) WHERE (despegue IS NOT NULL AND aterrizaje IS NOT NULL)
-\end{lstlisting}
-\item \textbf{ON DELETE}: \texttt{CASCADE} en las entidades débiles (\tb{punto\_ruta}, \tb{telemetria\_bateria}) y en las subclases de cliente; en las demás FK, el valor por defecto (\texttt{NO ACTION}), que impide, por ejemplo, borrar un drone que ya voló.
-\item \textbf{Sin índices adicionales}: solo existen los que PostgreSQL crea por sí mismo para PRIMARY KEY, UNIQUE y EXCLUDE. Las FOREIGN KEY no crean índice en PostgreSQL. Los índices del experimento se definen aparte (sección~\ref{sec:planes}).
-\end{enumerate}
-
-\archivo{sql/01_schema_prueba.sql} inserta un envío válido de punta a punta e intenta 13 violaciones (PK, UNIQUE, FK, CHECK y EXCLUDE). Las 13 son rechazadas con la restricción esperada.
 
 % ---------------------------------------------------------------------
 \subsection{Carga de datos}
@@ -234,6 +234,31 @@ CALL sp_cerrar_vuelo(1001, 5.40, true, '2026-11-20 10:16');
 \end{lstlisting}
 
 % ---------------------------------------------------------------------
+\subsubsection{Roles y privilegios}
+
+Se creó un rol por cada tipo de usuario de la sección 1.5.3, con privilegios mínimos, en dos niveles: \texttt{USAGE} sobre el esquema (tabla~\ref{tab:esquemas}) y luego permisos por tabla, vista o columna. Las escrituras de negocio se hacen \emph{solo} mediante procedimientos \texttt{SECURITY DEFINER}: por ejemplo, un operador puede despegar un vuelo con \texttt{sp\_despegar\_vuelo}, pero no puede hacer \texttt{UPDATE vuelo} directamente.
+
+\begin{table}[H]
+\centering\small
+\caption{Roles (\archivo{sql/06_roles.sql})}
+\begin{tabular}{lp{10.2cm}}
+\toprule
+Rol & Privilegios \\
+\midrule
+\texttt{rol\_administrador} & todos \\
+\texttt{rol\_despachador} & lectura de la operación; registra, programa, asigna y cancela mediante procedimientos \\
+\texttt{rol\_operador} & lectura de vuelos, rutas y telemetría; despega, cierra y cancela vuelos mediante procedimientos \\
+\texttt{rol\_cliente} & registra paquetes y rastrea por código (\texttt{fn\_rastrear\_paquete}) \\
+\texttt{rol\_tecnico} & lectura de telemetría e historial; \texttt{UPDATE} solo de salud, estado y ciclos de baterías, y estado y horas de drones \\
+\texttt{rol\_analista} & solo lectura de las vistas del esquema \texttt{reportes}; sin acceso al esquema \texttt{skynest} \\
+\texttt{rol\_telemetria} & solo \texttt{INSERT} en \tb{telemetria\_bateria} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\archivo{sql/06_roles_prueba.sql} comprueba con \texttt{SET ROLE} que cada rol puede hacer lo suyo y recibe \texttt{permission denied} en lo demás.
+
+% ---------------------------------------------------------------------
 \subsection{Triggers}
 
 Los triggers implementan las restricciones que la sección 3.1 dejó pendientes porque PostgreSQL no tiene \texttt{CREATE ASSERTION}. Todas lanzan \texttt{check\_violation} con un mensaje que nombra la regla.
@@ -293,31 +318,6 @@ ERROR:  R2: el nest 6 ya tiene 10 drones y su capacidad es 10
 ERROR:  R6: la ruta 601 debe tener al menos 2 puntos (despegue y entrega)
 ERROR:  conflicting key value violates exclusion constraint "ex_vuelo_bateria_solape"
 \end{lstlisting}
-
-% ---------------------------------------------------------------------
-\subsection{Roles y privilegios}
-
-Se creó un rol por cada tipo de usuario de la sección 1.5.3, con privilegios mínimos, en dos niveles: \texttt{USAGE} sobre el esquema (tabla~\ref{tab:esquemas}) y luego permisos por tabla, vista o columna. Las escrituras de negocio se hacen \emph{solo} mediante procedimientos \texttt{SECURITY DEFINER}: por ejemplo, un operador puede despegar un vuelo con \texttt{sp\_despegar\_vuelo}, pero no puede hacer \texttt{UPDATE vuelo} directamente.
-
-\begin{table}[H]
-\centering\small
-\caption{Roles (\archivo{sql/06_roles.sql})}
-\begin{tabular}{lp{10.2cm}}
-\toprule
-Rol & Privilegios \\
-\midrule
-\texttt{rol\_administrador} & todos \\
-\texttt{rol\_despachador} & lectura de la operación; registra, programa, asigna y cancela mediante procedimientos \\
-\texttt{rol\_operador} & lectura de vuelos, rutas y telemetría; despega, cierra y cancela vuelos mediante procedimientos \\
-\texttt{rol\_cliente} & registra paquetes y rastrea por código (\texttt{fn\_rastrear\_paquete}) \\
-\texttt{rol\_tecnico} & lectura de telemetría e historial; \texttt{UPDATE} solo de salud, estado y ciclos de baterías, y estado y horas de drones \\
-\texttt{rol\_analista} & solo lectura de las vistas del esquema \texttt{reportes}; sin acceso al esquema \texttt{skynest} \\
-\texttt{rol\_telemetria} & solo \texttt{INSERT} en \tb{telemetria\_bateria} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\archivo{sql/06_roles_prueba.sql} comprueba con \texttt{SET ROLE} que cada rol puede hacer lo suyo y recibe \texttt{permission denied} en lo demás.
 
 % =====================================================================
 \newpage
