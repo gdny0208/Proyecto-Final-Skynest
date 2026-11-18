@@ -18,7 +18,7 @@ La base se implementó en PostgreSQL 14 con scripts SQL numerados que se ejecuta
 \toprule
 Script & Contenido \\
 \midrule
-\archivo{sql/01_schema.sql} & 16 tablas con PK, FK, UNIQUE, CHECK y EXCLUDE (sección~\ref{sec:tablas}) \\
+\archivo{sql/01_schema.sql} & esquemas \texttt{skynest} y \texttt{reportes}; 16 tablas con PK, FK, UNIQUE, CHECK y EXCLUDE (sección~\ref{sec:tablas}) \\
 \archivo{sql/02_datos_reales.sql} & distritos, modelos de drone y nests reales (sección~\ref{sec:carga}) \\
 \archivo{gen/generar.py} & generador de datos sintéticos coherentes y carga con \texttt{COPY} \\
 \archivo{sql/03_triggers.sql} & 17 triggers: restricciones (i)--(x) y automatización de estados \\
@@ -31,6 +31,37 @@ Script & Contenido \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+% ---------------------------------------------------------------------
+\subsection{Esquemas}
+\label{sec:esquemas}
+
+Un esquema es una carpeta con nombre dentro de la base: agrupa tablas, vistas y funciones, y se le pueden dar permisos como a un todo. La base \texttt{skynest\_<escala>} se organizó en dos esquemas:
+
+\begin{table}[H]
+\centering\small
+\caption{Esquemas de la base}
+\label{tab:esquemas}
+\begin{tabular}{l>{\raggedright\arraybackslash}p{6.4cm}>{\raggedright\arraybackslash}p{5cm}}
+\toprule
+Esquema & Contenido & Quién entra (\texttt{USAGE}) \\
+\midrule
+\texttt{skynest} & el núcleo: 16 tablas, 12 funciones de trigger y 9 procedimientos & administrador, despachador, operador, técnico, telemetría y cliente \\
+\texttt{reportes} & 9 vistas y la función de rastreo (\texttt{fn\_rastrear\_paquete}) & administrador, despachador, operador, técnico, analista y cliente \\
+\texttt{public} & solo la extensión \texttt{btree\_gist} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La separación tiene dos efectos. Primero, el modelo queda ordenado: lo que se guarda (\texttt{skynest}) está aparte de lo que se consulta para reportar (\texttt{reportes}). Segundo, la seguridad es más simple: el analista recibe \texttt{USAGE} solo sobre \texttt{reportes}, por lo que no puede ni ver los nombres de las tablas del núcleo; si intenta \texttt{SELECT * FROM skynest.paquete}, PostgreSQL responde \texttt{permission denied for schema skynest} antes de revisar permisos de tabla.
+
+Para no escribir el esquema en cada consulta, \archivo{sql/01_schema.sql} fija la ruta de búsqueda por defecto de la base:
+\begin{lstlisting}[style=sql]
+CREATE SCHEMA skynest;
+CREATE SCHEMA reportes;
+ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public;
+\end{lstlisting}
+Así, \texttt{SELECT * FROM vuelo} se resuelve como \texttt{skynest.vuelo} y \texttt{v\_peso\_vuelo} como \texttt{reportes.v\_peso\_vuelo}. Los procedimientos \texttt{SECURITY DEFINER} y la función de rastreo fijan su propio \texttt{search\_path}, para que un usuario no pueda engañarlos creando una tabla con el mismo nombre en otro esquema.
 
 % ---------------------------------------------------------------------
 \subsection{Creación de Tablas en PostgreSQL}
@@ -266,7 +297,7 @@ ERROR:  conflicting key value violates exclusion constraint "ex_vuelo_bateria_so
 % ---------------------------------------------------------------------
 \subsection{Roles y privilegios}
 
-Se creó un rol por cada tipo de usuario de la sección 1.5.3, con privilegios mínimos. Las escrituras de negocio se hacen \emph{solo} mediante procedimientos \texttt{SECURITY DEFINER}: por ejemplo, un operador puede despegar un vuelo con \texttt{sp\_despegar\_vuelo}, pero no puede hacer \texttt{UPDATE vuelo} directamente.
+Se creó un rol por cada tipo de usuario de la sección 1.5.3, con privilegios mínimos, en dos niveles: \texttt{USAGE} sobre el esquema (tabla~\ref{tab:esquemas}) y luego permisos por tabla, vista o columna. Las escrituras de negocio se hacen \emph{solo} mediante procedimientos \texttt{SECURITY DEFINER}: por ejemplo, un operador puede despegar un vuelo con \texttt{sp\_despegar\_vuelo}, pero no puede hacer \texttt{UPDATE vuelo} directamente.
 
 \begin{table}[H]
 \centering\small
@@ -280,7 +311,7 @@ Rol & Privilegios \\
 \texttt{rol\_operador} & lectura de vuelos, rutas y telemetría; despega, cierra y cancela vuelos mediante procedimientos \\
 \texttt{rol\_cliente} & registra paquetes y rastrea por código (\texttt{fn\_rastrear\_paquete}) \\
 \texttt{rol\_tecnico} & lectura de telemetría e historial; \texttt{UPDATE} solo de salud, estado y ciclos de baterías, y estado y horas de drones \\
-\texttt{rol\_analista} & solo lectura de las vistas de reportes \\
+\texttt{rol\_analista} & solo lectura de las vistas del esquema \texttt{reportes}; sin acceso al esquema \texttt{skynest} \\
 \texttt{rol\_telemetria} & solo \texttt{INSERT} en \tb{telemetria\_bateria} \\
 \bottomrule
 \end{tabular}
@@ -640,7 +671,9 @@ Video de la ejecución de las cinco consultas en la base de 1\,000\,000 de vuelo
 Los cuatro dumps (\archivo{dumps/skynest_1k.dump} a \archivo{dumps/skynest_1m.dump}) se restauran con:
 \begin{lstlisting}[style=salida]
 createdb skynest_1m && pg_restore -d skynest_1m dumps/skynest_1m.dump
+psql -d skynest_1m -c "ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public"
 \end{lstlisting}
+La segunda línea se necesita porque \texttt{pg\_dump} guarda los esquemas y su contenido, pero no la ruta de búsqueda por defecto de la base.
 Para reconstruir todo desde cero (bases, verificación, dumps) y repetir el experimento:
 \begin{lstlisting}[style=salida]
 bash gen/construir_bases.sh                  # 4 bases + 4 dumps

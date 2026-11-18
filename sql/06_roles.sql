@@ -23,6 +23,7 @@
 -- =====================================================================
 
 \set ON_ERROR_STOP on
+SET search_path = skynest, reportes, public;
 BEGIN;
 
 -- ---------------------------------------------------------------------
@@ -44,30 +45,36 @@ END $$;
 -- 2. Punto de partida: nadie (PUBLIC) crea objetos ni ejecuta funciones
 -- ---------------------------------------------------------------------
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
-REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
-REVOKE EXECUTE ON ALL PROCEDURES IN SCHEMA public FROM PUBLIC;
-GRANT USAGE ON SCHEMA public TO rol_administrador, rol_despachador, rol_operador, rol_cliente,
-                                rol_tecnico, rol_analista, rol_telemetria;
+REVOKE ALL ON SCHEMA skynest, reportes FROM PUBLIC;
+REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA skynest, reportes FROM PUBLIC;
+REVOKE EXECUTE ON ALL PROCEDURES IN SCHEMA skynest FROM PUBLIC;
+
+-- USAGE = poder "entrar" al esquema (ver los nombres); los permisos de cada
+-- tabla o vista se dan aparte. El analista NO entra a skynest: solo ve reportes.
+GRANT USAGE ON SCHEMA skynest  TO rol_administrador, rol_despachador, rol_operador, rol_cliente,
+                                  rol_tecnico, rol_telemetria;
+GRANT USAGE ON SCHEMA reportes TO rol_administrador, rol_despachador, rol_operador, rol_cliente,
+                                  rol_tecnico, rol_analista;
 
 -- Los procedimientos de negocio corren con los permisos de su dueño
-ALTER PROCEDURE sp_registrar_cliente_persona(VARCHAR, VARCHAR, CHAR, VARCHAR, VARCHAR, INTEGER) SECURITY DEFINER SET search_path = public, pg_temp;
-ALTER PROCEDURE sp_registrar_cliente_empresa(VARCHAR, VARCHAR, CHAR, VARCHAR, VARCHAR, INTEGER) SECURITY DEFINER SET search_path = public, pg_temp;
-ALTER PROCEDURE sp_registrar_paquete(INTEGER, CHAR, NUMERIC, NUMERIC, NUMERIC, NUMERIC, VARCHAR, BOOLEAN, VARCHAR, VARCHAR, VARCHAR, NUMERIC, NUMERIC, CHAR) SECURITY DEFINER SET search_path = public, pg_temp;
-ALTER PROCEDURE sp_programar_vuelo(INTEGER, TIMESTAMP, VARCHAR, INTEGER) SECURITY DEFINER SET search_path = public, pg_temp;
-ALTER PROCEDURE sp_asignar_paquete(CHAR, INTEGER) SECURITY DEFINER SET search_path = public, pg_temp;
-ALTER PROCEDURE sp_despegar_vuelo(INTEGER, TIMESTAMP) SECURITY DEFINER SET search_path = public, pg_temp;
-ALTER PROCEDURE sp_cerrar_vuelo(INTEGER, NUMERIC, BOOLEAN, TIMESTAMP) SECURITY DEFINER SET search_path = public, pg_temp;
-ALTER PROCEDURE sp_cancelar_vuelo(INTEGER) SECURITY DEFINER SET search_path = public, pg_temp;
-ALTER PROCEDURE sp_registrar_lectura(INTEGER, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TIMESTAMP) SECURITY DEFINER SET search_path = public, pg_temp;
+ALTER PROCEDURE sp_registrar_cliente_persona(VARCHAR, VARCHAR, CHAR, VARCHAR, VARCHAR, INTEGER) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
+ALTER PROCEDURE sp_registrar_cliente_empresa(VARCHAR, VARCHAR, CHAR, VARCHAR, VARCHAR, INTEGER) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
+ALTER PROCEDURE sp_registrar_paquete(INTEGER, CHAR, NUMERIC, NUMERIC, NUMERIC, NUMERIC, VARCHAR, BOOLEAN, VARCHAR, VARCHAR, VARCHAR, NUMERIC, NUMERIC, CHAR) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
+ALTER PROCEDURE sp_programar_vuelo(INTEGER, TIMESTAMP, VARCHAR, INTEGER) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
+ALTER PROCEDURE sp_asignar_paquete(CHAR, INTEGER) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
+ALTER PROCEDURE sp_despegar_vuelo(INTEGER, TIMESTAMP) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
+ALTER PROCEDURE sp_cerrar_vuelo(INTEGER, NUMERIC, BOOLEAN, TIMESTAMP) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
+ALTER PROCEDURE sp_cancelar_vuelo(INTEGER) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
+ALTER PROCEDURE sp_registrar_lectura(INTEGER, NUMERIC, NUMERIC, NUMERIC, NUMERIC, TIMESTAMP) SECURITY DEFINER SET search_path = skynest, reportes, pg_temp;
 
 -- ---------------------------------------------------------------------
 -- 3. Permisos por rol
 -- ---------------------------------------------------------------------
 -- Administrador: todo
-GRANT ALL ON ALL TABLES IN SCHEMA public TO rol_administrador;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO rol_administrador;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO rol_administrador;
-GRANT EXECUTE ON ALL PROCEDURES IN SCHEMA public TO rol_administrador;
+GRANT ALL ON ALL TABLES IN SCHEMA skynest, reportes TO rol_administrador;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA skynest TO rol_administrador;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA skynest, reportes TO rol_administrador;
+GRANT EXECUTE ON ALL PROCEDURES IN SCHEMA skynest TO rol_administrador;
 
 -- Despachador: lee la operación y la programa mediante procedimientos
 GRANT SELECT ON distrito, estacion_nest, modelo_drone, drone, bateria, operador, autorizacion,

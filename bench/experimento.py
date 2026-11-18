@@ -94,7 +94,7 @@ def borrar_indices_extra(cur):
         SELECT i.indexrelid::regclass::text
         FROM pg_index i
         JOIN pg_class t ON t.oid = i.indrelid
-        WHERE t.relnamespace = 'public'::regnamespace
+        WHERE t.relnamespace = 'skynest'::regnamespace
           AND NOT EXISTS (SELECT 1 FROM pg_constraint k WHERE k.conindid = i.indexrelid)""")
     for (ix,) in cur.fetchall():
         cur.execute(f'DROP INDEX IF EXISTS {ix}')
@@ -481,7 +481,8 @@ def main():
 
     t0 = time.time()
     for i, e in enumerate(a.escalas):
-        conn = psycopg2.connect(dbname=f'skynest_{e}', host=a.host, port=a.port, user=a.user)
+        conn = psycopg2.connect(dbname=f'skynest_{e}', host=a.host, port=a.port, user=a.user,
+                                options='-c search_path=skynest,reportes,public')
         conn.autocommit = True
         if i == 0:
             open(os.path.join(a.salida, 'plataforma.txt'), 'w', encoding='utf-8').write(plataforma(conn) + '\n')

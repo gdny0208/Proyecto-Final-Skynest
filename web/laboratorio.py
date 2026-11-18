@@ -64,7 +64,7 @@ def _indices_extra(cur):
     cur.execute("""
         SELECT i.indexrelid::regclass::text
         FROM pg_index i JOIN pg_class t ON t.oid = i.indrelid
-        WHERE t.relnamespace = 'public'::regnamespace
+        WHERE t.relnamespace = 'skynest'::regnamespace
           AND NOT EXISTS (SELECT 1 FROM pg_constraint k WHERE k.conindid = i.indexrelid)""")
     return {r[0] for r in cur.fetchall()}
 

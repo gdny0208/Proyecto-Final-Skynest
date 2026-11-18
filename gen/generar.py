@@ -549,7 +549,8 @@ def main():
     ap.add_argument('--csv', default=None, help='carpeta donde guardar también los CSV (opcional)')
     a = ap.parse_args()
 
-    conn = psycopg2.connect(dbname=a.db, host=a.host, port=a.port, user=a.user)
+    conn = psycopg2.connect(dbname=a.db, host=a.host, port=a.port, user=a.user,
+                            options='-c search_path=skynest,reportes,public')
     t0 = time.time()
     print(f'Generando N = {a.n:,} vuelos para {a.db} ...')
     carpeta = a.csv or tempfile.mkdtemp(prefix='skynest_')

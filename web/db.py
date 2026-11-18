@@ -31,6 +31,9 @@ _cargar_env()
 # Solo se permite conectar a las bases del proyecto
 NOMBRE_VALIDO = re.compile(r'^skynest_[a-z0-9]+$')
 
+# Toda conexión busca primero en el esquema skynest y luego en reportes
+RUTA = '-c search_path=skynest,reportes,public'
+
 
 def validar_base(base):
     if not NOMBRE_VALIDO.match(base or ''):
@@ -42,7 +45,7 @@ def validar_base(base):
 def conexion(base, autocommit=False):
     """Abre una conexión a la base indicada y la cierra al terminar.
     Sin autocommit: hace COMMIT si todo salió bien y ROLLBACK si hubo error."""
-    conn = psycopg2.connect(dbname=validar_base(base))
+    conn = psycopg2.connect(dbname=validar_base(base), options=RUTA)
     conn.autocommit = autocommit
     try:
         yield conn

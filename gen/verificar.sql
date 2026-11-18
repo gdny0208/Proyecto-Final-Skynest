@@ -6,6 +6,7 @@
 --
 -- Uso:  psql -d skynest_1k -f gen/verificar.sql
 -- =====================================================================
+SET search_path = skynest, reportes, public;
 
 SELECT regla, violaciones, CASE WHEN violaciones = 0 THEN 'OK' ELSE 'REVISAR' END AS estado
 FROM (

@@ -22,6 +22,7 @@
 -- =====================================================================
 
 \set ON_ERROR_STOP on
+SET search_path = skynest, reportes, public;
 
 BEGIN;
 

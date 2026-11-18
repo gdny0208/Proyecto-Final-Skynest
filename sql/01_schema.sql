@@ -2,7 +2,7 @@
 -- SkyNest · Proyecto Final CS2041 Base de Datos I · Grupo 3 · Tópico 4
 -- 01_schema.sql : modelo físico en PostgreSQL 14
 --
--- Traduce el diccionario de datos (sección 3.3 del Hito 1) tal cual:
+-- Crea los esquemas skynest y reportes y traduce el diccionario de datos (sección 3.3 del Hito 1) tal cual:
 -- mismos nombres, tipos, nulos y claves.
 --   * Aquí van PK, FK, UNIQUE, CHECK de fila y el EXCLUDE de baterías.
 --   * Las reglas que cruzan tablas (ii)-(vi), (viii)-(x), la cobertura
@@ -17,14 +17,35 @@
 
 BEGIN;
 
--- Re-ejecutable: borra en orden inverso de dependencias
-DROP TABLE IF EXISTS telemetria_bateria, paquete, vuelo, permiso_vuelo,
-    punto_ruta, ruta_vuelo, cliente_empresa, cliente_persona, cliente,
-    autorizacion, operador, bateria, drone, modelo_drone, estacion_nest,
-    distrito CASCADE;
+-- ---------------------------------------------------------------------
+-- Esquemas
+--   skynest  : el núcleo (16 tablas, triggers y procedimientos)
+--   reportes : vistas de reportes y la función de rastreo (05_vistas.sql)
+-- Separarlos permite dar a analistas y clientes acceso SOLO a reportes,
+-- sin USAGE sobre el núcleo (06_roles.sql).
+-- Re-ejecutable: borra los esquemas y todo lo que contienen.
+-- ---------------------------------------------------------------------
+DROP SCHEMA IF EXISTS reportes CASCADE;
+DROP SCHEMA IF EXISTS skynest CASCADE;
+-- (bases creadas antes de usar esquemas: tablas sueltas en public)
+DROP TABLE IF EXISTS public.telemetria_bateria, public.paquete, public.vuelo, public.permiso_vuelo,
+    public.punto_ruta, public.ruta_vuelo, public.cliente_empresa, public.cliente_persona, public.cliente,
+    public.autorizacion, public.operador, public.bateria, public.drone, public.modelo_drone,
+    public.estacion_nest, public.distrito CASCADE;
 
--- Necesaria para el EXCLUDE de vuelo (R12: batería sin vuelos solapados)
-CREATE EXTENSION IF NOT EXISTS btree_gist;
+CREATE SCHEMA skynest;
+CREATE SCHEMA reportes;
+
+-- search_path: los nombres sin esquema se buscan primero en skynest.
+-- SET vale para esta sesión; ALTER DATABASE lo deja por defecto en toda conexión nueva.
+SET search_path = skynest, reportes, public;
+DO $$ BEGIN
+    EXECUTE format('ALTER DATABASE %I SET search_path = skynest, reportes, public', current_database());
+END $$;
+
+-- Necesaria para el EXCLUDE de vuelo (R12: batería sin vuelos solapados).
+-- Las extensiones quedan en public, compartidas por ambos esquemas.
+CREATE EXTENSION IF NOT EXISTS btree_gist SCHEMA public;
 
 -- ---------------------------------------------------------------------
 -- 1. distrito
@@ -363,10 +384,10 @@ CREATE TABLE telemetria_bateria (
 
 COMMIT;
 
--- Resumen: tablas creadas y número de restricciones por tabla
+-- Resumen: tablas creadas en el esquema skynest y número de restricciones por tabla
 SELECT c.relname AS tabla, count(k.conname) AS restricciones
 FROM pg_class c
 LEFT JOIN pg_constraint k ON k.conrelid = c.oid
-WHERE c.relkind = 'r' AND c.relnamespace = 'public'::regnamespace
+WHERE c.relkind = 'r' AND c.relnamespace = 'skynest'::regnamespace
 GROUP BY c.relname
 ORDER BY c.relname;

@@ -55,3 +55,4 @@ done
 
 echo "Listo. Para restaurar un dump en otra máquina:"
 echo "  createdb skynest_1m && pg_restore -d skynest_1m dumps/skynest_1m.dump"
+echo "  psql -d skynest_1m -c \"ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public\""

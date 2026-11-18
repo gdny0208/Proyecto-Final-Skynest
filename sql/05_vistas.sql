@@ -17,6 +17,7 @@
 -- =====================================================================
 
 \set ON_ERROR_STOP on
+SET search_path = reportes, skynest, public;
 BEGIN;
 
 -- ---------------------------------------------------------------------
@@ -48,7 +49,7 @@ CREATE OR REPLACE FUNCTION fn_rastrear_paquete(p_codigo CHAR(12))
 RETURNS TABLE (codigo_tracking CHAR(12), estado_paquete VARCHAR, distrito_destino VARCHAR,
                fecha_registro TIMESTAMP, fecha_entrega TIMESTAMP, estado_vuelo VARCHAR,
                despegue TIMESTAMP, aterrizaje TIMESTAMP)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp AS $$
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = reportes, skynest, pg_temp AS $$
     SELECT codigo_tracking, estado_paquete, distrito_destino, fecha_registro, fecha_entrega,
            estado_vuelo, despegue, aterrizaje
     FROM v_seguimiento_paquete
@@ -213,4 +214,4 @@ GROUP BY o.id_operador, o.nombres, o.apellidos, o.nro_licencia, o.venc_licencia,
 
 COMMIT;
 
-SELECT table_name AS vista FROM information_schema.views WHERE table_schema = 'public' ORDER BY 1;
+SELECT table_name AS vista FROM information_schema.views WHERE table_schema = 'reportes' ORDER BY 1;

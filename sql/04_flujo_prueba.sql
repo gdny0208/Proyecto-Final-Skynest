@@ -9,6 +9,7 @@
 -- =====================================================================
 
 \set ON_ERROR_STOP off
+SET search_path = skynest, reportes, public;
 \set VERBOSITY terse
 \pset footer off
 BEGIN;

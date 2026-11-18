@@ -8,6 +8,7 @@
 -- =====================================================================
 
 \set ON_ERROR_STOP off
+SET search_path = skynest, reportes, public;
 \set VERBOSITY terse
 \pset footer off
 BEGIN;
@@ -18,9 +19,9 @@ SELECT id_vuelo AS vprog FROM vuelo WHERE estado = 'programado' LIMIT 1 \gset
 SAVEPOINT s; SET LOCAL ROLE rol_analista;
 SELECT count(*) AS filas_v_entregas FROM v_entregas_nest_distrito;
 ROLLBACK TO s;
-\echo '--- rol_analista: NO lee las tablas directamente'
+\echo '--- rol_analista: NO entra al esquema skynest (tablas del núcleo)'
 SAVEPOINT s; SET LOCAL ROLE rol_analista;
-SELECT count(*) FROM paquete;
+SELECT count(*) FROM skynest.paquete;
 ROLLBACK TO s;
 
 \echo '--- rol_cliente: SÍ rastrea un paquete por su código'

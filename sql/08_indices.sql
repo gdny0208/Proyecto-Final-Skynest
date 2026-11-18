@@ -21,6 +21,7 @@
 -- Formato: cada plan empieza con "-- @plan Cn X" (lo lee bench/experimento.py).
 -- Ejecutar este archivo completo crea TODOS los índices a la vez.
 -- =====================================================================
+SET search_path = skynest, reportes, public;
 
 -- @plan C1 A
 -- B+ (btree) simple en la fecha de despegue y en la FK paquete.id_vuelo.

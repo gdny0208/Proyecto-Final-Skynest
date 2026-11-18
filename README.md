@@ -73,6 +73,12 @@ Está en `docs/Proyecto_Hito1_Grupo3.pdf`.
 | `paquete` | Envíos con código de tracking, estado y fechas |
 | `telemetria_bateria` | Lecturas de voltaje, corriente, temperatura y carga (entidad débil de `vuelo`) |
 
+**Esquemas.** La base tiene dos esquemas (carpetas con nombre dentro de la base):
+- `skynest`: el núcleo, con las 16 tablas, los triggers y los procedimientos.
+- `reportes`: las 9 vistas y la función de rastreo `fn_rastrear_paquete`.
+
+`sql/01_schema.sql` deja `search_path = skynest, reportes, public` como ruta por defecto de la base, así que en psql basta escribir `SELECT * FROM vuelo`. El analista solo tiene acceso a `reportes`: no puede ver las tablas del núcleo.
+
 **Decisiones del Hito 2** (detalladas en el informe):
 - **R5 se corrigió** porque contradecía a R9. Ahora se pueden crear rutas hacia distritos restringidos, pero cada vuelo necesita un permiso vigente.
 - **La escala N es el número de vuelos**, con 1,5 paquetes y 5 lecturas de telemetría por vuelo. El Hito 1 preveía 180 lecturas por vuelo, que en la escala de 1M darían 180 millones de filas; se submuestreó.
@@ -144,6 +150,13 @@ bash gen/construir_bases.sh        # skynest_1k, skynest_10k, skynest_100k y sky
 bash gen/construir_bases.sh 1k     # o solo una escala
 ```
 Por cada escala crea la base, ejecuta `sql/01` y `02`, genera y carga los datos, instala `sql/03` a `06`, corre las 18 verificaciones (todas deben dar 0 violaciones) y guarda el dump.
+
+Para restaurar un dump (por ejemplo, el que te pasó un compañero) en lugar de generar la base:
+```bash
+createdb skynest_1m && pg_restore -d skynest_1m dumps/skynest_1m.dump
+psql -d skynest_1m -c "ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public"
+```
+La segunda línea hace falta porque el dump guarda los esquemas, pero no la ruta de búsqueda por defecto.
 
 ### Levantar la web
 ```bash

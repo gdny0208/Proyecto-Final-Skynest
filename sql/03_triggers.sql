@@ -14,6 +14,7 @@
 -- =====================================================================
 
 \set ON_ERROR_STOP on
+SET search_path = skynest, reportes, public;
 BEGIN;
 
 -- Re-ejecutable: borra los triggers trg_* que ya existan
