@@ -11,3 +11,8 @@ informe/*.log
 informe/*.out
 informe/*.toc
 informe/*.synctex.gz
+
+# videos del anexo (se suben a YouTube/Drive, no a GitHub)
+*.mov
+*.mp4
+videos_anexo/
