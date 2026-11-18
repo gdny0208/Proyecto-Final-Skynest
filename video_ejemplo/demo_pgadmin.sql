@@ -12,15 +12,16 @@ SELECT current_database()                         AS base,
        (SELECT count(*) FROM telemetria_bateria)  AS lecturas_telemetria,
        pg_size_pretty(pg_database_size(current_database())) AS tamano;
 
--- 2. Las 16 tablas y cuántas filas tiene cada una
-SELECT relname AS tabla, n_live_tup AS filas_aprox
+-- 2. Las 16 tablas del esquema skynest y cuántas filas tiene cada una
+SELECT schemaname AS esquema, relname AS tabla, n_live_tup AS filas_aprox
 FROM pg_stat_user_tables
+WHERE schemaname = 'skynest'
 ORDER BY n_live_tup DESC;
 
 -- 3. Partimos sin índices del experimento (solo PK, UNIQUE y EXCLUDE)
 SELECT tablename, indexname
 FROM pg_indexes
-WHERE schemaname = 'public' AND tablename = 'telemetria_bateria';
+WHERE schemaname = 'skynest' AND tablename = 'telemetria_bateria';
 
 -- 4. C3 SIN índices: mirar "Parallel Seq Scan" y "Execution Time" al final
 EXPLAIN (ANALYZE, BUFFERS)

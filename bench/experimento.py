@@ -94,7 +94,7 @@ def borrar_indices_extra(cur):
         SELECT i.indexrelid::regclass::text
         FROM pg_index i
         JOIN pg_class t ON t.oid = i.indrelid
-        WHERE t.relnamespace = 'skynest'::regnamespace
+        WHERE t.relnamespace::regnamespace::text IN ('skynest', 'public')  -- public: bases anteriores a los esquemas
           AND NOT EXISTS (SELECT 1 FROM pg_constraint k WHERE k.conindid = i.indexrelid)""")
     for (ix,) in cur.fetchall():
         cur.execute(f'DROP INDEX IF EXISTS {ix}')
@@ -308,7 +308,8 @@ def tablas_latex(filas_q, filas_u, carpeta):
                 for e in esc:
                     f = idx.get((e, c, cond))
                     celdas.append('--' if not f else f"{num(f['media_ms'])} $\\pm$ {num(f['desv_ms'])}")
-                out.append(f'{c} & {cond} & ' + ' & '.join(celdas) + r' \\')
+                etq = cond.replace('_', r'\_')   # B_rpc -> B\_rpc (el _ rompe LaTeX)
+                out.append(f'{c} & {etq} & ' + ' & '.join(celdas) + r' \\')
             out.append(r'\midrule' if c != 'C5' else r'\bottomrule')
         out += [r'\end{tabular}', r'\end{table}']
         open(os.path.join(carpeta, archivo), 'w', encoding='utf-8').write('\n'.join(out) + '\n')

@@ -40,7 +40,7 @@ Duración total sugerida: **8 a 10 minutos**.
 |---|---|---|
 | A1 | Presentación con pgAdmin en pantalla. | "Somos el Grupo 3, proyecto SkyNest. Vamos a mostrar el experimento con un millón de registros, sin índices y con índices." |
 | A2 | Panel izquierdo (**Object Explorer**): despliega **Servers → PostgreSQL local → Databases**. Señala `skynest_1k`, `skynest_10k`, `skynest_100k` y `skynest_1m`. | "Estas son las cuatro bases del experimento, una por escala: mil, diez mil, cien mil y un millón de vuelos. Cada una tiene su dump." |
-| A3 | Despliega **skynest_1m → Schemas → public → Tables**. Baja un poco para que se vean las tablas. | "La base de un millón tiene las 16 tablas del modelo relacional." |
+| A3 | Despliega **skynest_1m → Schemas**. Señala los dos esquemas: abre **skynest → Tables** (16 tablas) y luego **reportes → Views** (9 vistas). | "La base tiene dos esquemas: skynest, con las 16 tablas del modelo relacional, y reportes, con las vistas. El analista solo tiene acceso a reportes." |
 | A4 | Haz clic en **skynest_1m** y luego menú **Tools → Query Tool** (o `Alt+Shift+Q`). En el Query Tool: ícono de carpeta (**Open File**) → `demo_pgadmin.sql`. | "Abrimos el editor SQL conectado a skynest_1m. Vamos a ejecutar el script bloque por bloque." |
 
 Para cada bloque: **selecciona el bloque con el mouse** (desde el comentario `-- N.` hasta su `;`) y pulsa
@@ -49,7 +49,7 @@ Para cada bloque: **selecciona el bloque con el mouse** (desde el comentario `--
 | Bloque | Resultado que debe salir | Qué señalar / decir |
 |---|---|---|
 | **1** · Conteos | `skynest_1m · 1000000 · 1502865 · 4851512 · ~1139 MB` | "Un millón de vuelos, un millón y medio de paquetes y casi cinco millones de lecturas de telemetría. La base pesa más de 1 GB." |
-| **2** · Tablas y filas | 16 filas, `telemetria_bateria` arriba con ~4,85 M | "Estas son las filas por tabla; la telemetría es la más grande." |
+| **2** · Tablas y filas | 16 filas del esquema `skynest`, `telemetria_bateria` arriba con ~4,85 M | "Estas son las filas por tabla; la telemetría es la más grande." |
 | **3** · Índices actuales | Solo `pk_telemetria_bateria` | "Partimos sin los índices del experimento: solo la llave primaria." |
 | **4** · C3 **sin** índice | En **Data Output**, el plan en texto. Busca `Parallel Seq Scan on telemetria_bateria` y `Rows Removed by Filter: ~1 600 000`. Baja hasta la última fila: `Execution Time: …` | "La consulta C3 busca baterías que pasaron 60 °C en octubre. Sin índice, PostgreSQL recorre toda la tabla de telemetría y descarta casi todas las filas. Tarda X milisegundos." **Pulsa F5 otra vez** y di: "En la segunda ejecución los datos ya están en memoria y baja a Y ms." |
 | **5** · Crear índice | `tamano_indice = 424 kB` | "Creamos el índice parcial del Plan B: solo indexa las lecturas sobre 60 °C. Ocupa apenas 424 kB." |
