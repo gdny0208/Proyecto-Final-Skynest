@@ -50,7 +50,7 @@ Está en `docs/Proyecto_Hito1_Grupo3.pdf`.
 **Hito 2 (este repositorio):**
 - **Implementación en PostgreSQL:** creación de tablas, carga de datos reales y sintéticos, al menos 5 consultas intermedias no triviales, vistas, procedimientos almacenados y triggers para las reglas de negocio.
 - **Optimización y experimentación:** las 5 consultas medidas con y sin índices en **4 escalas (1k, 10k, 100k y 1M)** con 4 dumps, el análisis de los tiempos de consulta y de actualización con distintos índices, y cuadros estadísticos.
-- **Informe en LaTeX** con la estructura del enunciado (secciones 1 a 7) y un **video** del experimento con 1 millón de registros, con y sin índices.
+- **Informe en LaTeX** con la estructura del enunciado (secciones 1 a 7) y **5 videos** del experimento con 1 millón de registros (uno por consulta), con y sin índices. Guía y scripts en `video_ejemplo/`.
 - **Puntos extra (+2):** un MVP web funcional conectado a PostgreSQL que permita interactuar con los datos y ejecute las consultas intermedias.
 - **Pregunta extra:** la complejidad por encima del millón de registros y si basta la arquitectura cliente-servidor.
 - Penalidad de −4 puntos por día de retraso, con un máximo de 1 día.

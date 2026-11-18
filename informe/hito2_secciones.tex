@@ -667,7 +667,14 @@ Laboratorio & Las cinco consultas sin índices o con los planes A y B: resultado
 \end{figure}
 
 \subsection{Video de la experimentación}
-Video de la ejecución de las cinco consultas en la base de 1\,000\,000 de vuelos, sin índices y con índices: \url{PEGAR-ENLACE-DEL-VIDEO}.
+Cinco videos, uno por consulta, ejecutados en pgAdmin sobre la base de 1\,000\,000 de vuelos. Cada uno muestra el plan de ejecución y el tiempo de la consulta sin índices y con el índice que más la mejoró, y al final borra el índice. Los scripts están en \archivo{video_ejemplo/demo_c1.sql} a \archivo{video_ejemplo/demo_c5.sql}.
+\begin{itemize}
+\item Consulta 1 (índices cubrientes): \url{PEGAR-ENLACE-C1}
+\item Consulta 2 (índice compuesto): \url{PEGAR-ENLACE-C2}
+\item Consulta 3 (índice parcial): \url{PEGAR-ENLACE-C3}
+\item Consulta 4 (B+ en la fecha): \url{PEGAR-ENLACE-C4}
+\item Consulta 5 (compuesto y cubriente, y \texttt{random\_page\_cost = 1.1}): \url{PEGAR-ENLACE-C5}
+\end{itemize}
 
 % ---------------------------------------------------------------------
 \subsection{Planes de ejecución completos (escala 1M)}
