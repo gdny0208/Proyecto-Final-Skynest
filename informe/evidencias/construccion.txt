@@ -1,24 +1,25 @@
 =================== skynest_1k (N = 1000 vuelos) ===================
 Generando N = 1,000 vuelos para skynest_1k ...
-Generación: 0.6 s. Cargando con COPY:
-  ruta_vuelo                  600 filas      0.0 s
+Generación: 0.4 s. Cargando con COPY:
+  ruta_vuelo                  600 filas      0.1 s
   punto_ruta                4,236 filas      0.0 s
   drone                       300 filas      0.0 s
   bateria                     900 filas      0.0 s
   operador                    120 filas      0.0 s
-  autorizacion              7,872 filas      0.0 s
+  autorizacion              7,872 filas      0.1 s
   permiso_vuelo                32 filas      0.0 s
   cliente                     101 filas      0.0 s
   cliente_persona              76 filas      0.0 s
   cliente_empresa              25 filas      0.0 s
   vuelo                     1,000 filas      0.0 s
-  paquete                   1,531 filas      0.0 s
+  paquete                   1,531 filas      0.1 s
   telemetria_bateria        4,867 filas      0.0 s
-Listo en 1.4 s.
+Listo en 1.1 s.
   ejecutando sql/03_triggers.sql
   ejecutando sql/04_procedimientos.sql
   ejecutando sql/05_vistas.sql
   ejecutando sql/06_roles.sql
+SET
                                 regla                                | violaciones | estado 
 ---------------------------------------------------------------------+-------------+--------
  FK vuelo -> drone/bateria/ruta/operador                             |           0 | OK
@@ -46,28 +47,29 @@ Listo en 1.4 s.
    1000 |     1531 |          1.53 |     4867 |                 74 |                         35
 (1 row)
 
-  dump: dumps/skynest_1k.dump (512K)
+  dump: dumps/skynest_1k.dump (448K)
 =================== skynest_10k (N = 10000 vuelos) ===================
 Generando N = 10,000 vuelos para skynest_10k ...
 Generación: 0.9 s. Cargando con COPY:
   ruta_vuelo                  600 filas      0.0 s
-  punto_ruta                4,236 filas      0.0 s
-  drone                       300 filas      0.0 s
-  bateria                     900 filas      0.0 s
+  punto_ruta                4,236 filas      0.1 s
+  drone                       300 filas      0.1 s
+  bateria                     900 filas      0.1 s
   operador                    120 filas      0.0 s
-  autorizacion              7,872 filas      0.0 s
+  autorizacion              7,872 filas      0.1 s
   permiso_vuelo                32 filas      0.0 s
   cliente                   1,013 filas      0.0 s
   cliente_persona             760 filas      0.0 s
   cliente_empresa             253 filas      0.0 s
-  vuelo                    10,000 filas      0.1 s
+  vuelo                    10,000 filas      0.2 s
   paquete                  15,081 filas      0.2 s
-  telemetria_bateria       48,496 filas      0.6 s
-Listo en 2.7 s.
+  telemetria_bateria       48,496 filas      0.2 s
+Listo en 2.5 s.
   ejecutando sql/03_triggers.sql
   ejecutando sql/04_procedimientos.sql
   ejecutando sql/05_vistas.sql
   ejecutando sql/06_roles.sql
+SET
                                 regla                                | violaciones | estado 
 ---------------------------------------------------------------------+-------------+--------
  FK vuelo -> drone/bateria/ruta/operador                             |           0 | OK
@@ -98,7 +100,7 @@ Listo en 2.7 s.
   dump: dumps/skynest_10k.dump (3.1M)
 =================== skynest_100k (N = 100000 vuelos) ===================
 Generando N = 100,000 vuelos para skynest_100k ...
-Generación: 6.5 s. Cargando con COPY:
+Generación: 6.2 s. Cargando con COPY:
   ruta_vuelo                  600 filas      0.0 s
   punto_ruta                4,236 filas      0.0 s
   drone                       300 filas      0.0 s
@@ -107,16 +109,17 @@ Generación: 6.5 s. Cargando con COPY:
   autorizacion              7,872 filas      0.0 s
   permiso_vuelo                32 filas      0.0 s
   cliente                  10,133 filas      0.1 s
-  cliente_persona           7,600 filas      0.0 s
+  cliente_persona           7,600 filas      0.1 s
   cliente_empresa           2,533 filas      0.0 s
-  vuelo                   100,000 filas      2.1 s
-  paquete                 150,219 filas      2.0 s
-  telemetria_bateria      484,933 filas      1.5 s
-Listo en 13.2 s.
+  vuelo                   100,000 filas      2.3 s
+  paquete                 150,219 filas      1.9 s
+  telemetria_bateria      484,933 filas      1.8 s
+Listo en 13.4 s.
   ejecutando sql/03_triggers.sql
   ejecutando sql/04_procedimientos.sql
   ejecutando sql/05_vistas.sql
   ejecutando sql/06_roles.sql
+SET
                                 regla                                | violaciones | estado 
 ---------------------------------------------------------------------+-------------+--------
  FK vuelo -> drone/bateria/ruta/operador                             |           0 | OK
@@ -147,7 +150,7 @@ Listo en 13.2 s.
   dump: dumps/skynest_100k.dump ( 21M)
 =================== skynest_1m (N = 1000000 vuelos) ===================
 Generando N = 1,000,000 vuelos para skynest_1m ...
-Generación: 59.9 s. Cargando con COPY:
+Generación: 62.5 s. Cargando con COPY:
   ruta_vuelo                  600 filas      0.0 s
   punto_ruta                4,236 filas      0.0 s
   drone                       300 filas      0.0 s
@@ -155,17 +158,18 @@ Generación: 59.9 s. Cargando con COPY:
   operador                    120 filas      0.0 s
   autorizacion              7,872 filas      0.0 s
   permiso_vuelo                32 filas      0.0 s
-  cliente                 101,333 filas      0.7 s
+  cliente                 101,333 filas      0.9 s
   cliente_persona          76,000 filas      0.5 s
   cliente_empresa          25,333 filas      0.2 s
-  vuelo                 1,000,000 filas     24.4 s
-  paquete               1,502,865 filas     16.0 s
-  telemetria_bateria    4,851,512 filas     17.6 s
-Listo en 121.6 s.
+  vuelo                 1,000,000 filas     26.4 s
+  paquete               1,502,865 filas     26.8 s
+  telemetria_bateria    4,851,512 filas     22.6 s
+Listo en 145.6 s.
   ejecutando sql/03_triggers.sql
   ejecutando sql/04_procedimientos.sql
   ejecutando sql/05_vistas.sql
   ejecutando sql/06_roles.sql
+SET
                                 regla                                | violaciones | estado 
 ---------------------------------------------------------------------+-------------+--------
  FK vuelo -> drone/bateria/ruta/operador                             |           0 | OK
@@ -193,6 +197,7 @@ Listo en 121.6 s.
  1000000 |  1502865 |          1.50 |  4851512 |              74890 |                      28786
 (1 row)
 
-  dump: dumps/skynest_1m.dump (209M)
+  dump: dumps/skynest_1m.dump (208M)
 Listo. Para restaurar un dump en otra máquina:
   createdb skynest_1m && pg_restore -d skynest_1m dumps/skynest_1m.dump
+  psql -d skynest_1m -c "ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public"
