@@ -1,0 +1,13 @@
+Sort   [12 filas]
+ -> GroupAggregate   [12 filas]
+    -> Sort   [18 filas]
+       -> Hash Join   [18 filas]
+          -> Nested Loop   [18 filas]
+             -> Hash Join   [18 filas]
+                -> Seq Scan on vuelo v   [1 000 filas]
+                -> Hash   [18 filas]
+                   -> Index Only Scan using ix_c5b_paquete_express_cov on paquete p   [18 filas]
+             -> Index Scan using pk_ruta_vuelo on ruta_vuelo r   [1 fila ×18]
+          -> Hash   [50 filas]
+             -> Seq Scan on distrito d   [50 filas]
+Tiempo de ejecución: 0,1 ms

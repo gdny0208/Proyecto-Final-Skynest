@@ -1,0 +1,28 @@
+Sort   [9 filas]
+  -> Hash Join   [9 filas]
+      -> Seq Scan on estacion_nest   [1 fila]
+         (descarta 29 filas)
+     -> Seq Scan on vuelo v   [134 filas]
+        (descarta 866 filas)
+     -> Hash   [20 filas]
+        -> Seq Scan on ruta_vuelo r_1   [20 filas]
+           (descarta 580 filas)
+ -> GroupAggregate   [9 filas]
+    -> Sort   [9 filas]
+       -> Nested Loop   [9 filas]
+          -> Hash Join   [9 filas]
+             -> Seq Scan on ruta_vuelo r   [600 filas]
+             -> Hash   [9 filas]
+                -> Hash Join   [9 filas]
+                   -> Seq Scan on drone dr   [300 filas]
+                   -> Hash   [9 filas]
+                      -> Merge Join   [9 filas]
+                         -> Sort   [9 filas]
+                            -> CTE Scan on vuelos_sel vs   [9 filas]
+                         -> GroupAggregate   [9 filas]
+                            -> Sort   [44 filas]
+                               -> Nested Loop   [44 filas]
+                                  -> CTE Scan on vuelos_sel vs_1   [9 filas]
+                                  -> Index Scan using pk_telemetria_bateria on telemetria_bateria t   [5 filas ×9]
+          -> Index Scan using pk_modelo_drone on modelo_drone m   [1 fila ×9]
+Tiempo de ejecución: 0,2 ms

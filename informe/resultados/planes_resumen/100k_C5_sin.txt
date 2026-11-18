@@ -1,0 +1,17 @@
+Sort   [34 filas]
+ -> Finalize GroupAggregate   [34 filas]
+    -> Gather Merge   [68 filas]
+       -> Partial GroupAggregate   [34 filas ×2]
+          -> Sort   [1 016 filas ×2]
+             -> Hash Join   [1 016 filas ×2]
+                -> Parallel Hash Join   [1 016 filas ×2]
+                   -> Parallel Seq Scan on vuelo v   [50 000 filas ×2]
+                   -> Parallel Hash   [1 016 filas ×2]
+                      -> Hash Join   [1 016 filas ×2]
+                         -> Parallel Seq Scan on paquete p   [1 016 filas ×2]
+                            (descarta 74 093 filas)
+                         -> Hash   [50 filas ×2]
+                            -> Seq Scan on distrito d   [50 filas ×2]
+                -> Hash   [600 filas ×2]
+                   -> Seq Scan on ruta_vuelo r   [600 filas ×2]
+Tiempo de ejecución: 17,6 ms

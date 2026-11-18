@@ -105,6 +105,7 @@ gen/
   construir_bases.sh       construye las 4 bases, las verifica y genera los dumps
 bench/
   experimento.py           experimento automatizado: tiempos, planes, tablas LaTeX y gráficos
+  resumir_planes.py        versión corta de los planes para el cuerpo del informe (la llama experimento.py)
 web/
   app.py                   API y servidor de la web (FastAPI)
   db.py                    conexión a PostgreSQL

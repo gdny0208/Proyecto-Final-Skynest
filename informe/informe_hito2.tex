@@ -599,7 +599,7 @@ id\_vuelo $\rightarrow$ vuelo (ON DELETE CASCADE)
 \item \textbf{3FN/FNBC}: los únicos determinantes de cada tabla son sus claves candidatas. Por ejemplo, en \tb{paquete} los datos del cliente no se repiten, sino que se obtienen mediante \at{id\_cliente}. En \tb{vuelo}, el nest de origen no se almacena porque se deriva de la ruta. En \tb{drone}, las características técnicas están en \tb{modelo\_drone}. En \tb{ruta\_vuelo}, la distancia depende de la ruta y no del par (origen, destino), porque puede haber varios corredores entre el mismo nest y el mismo distrito. En \tb{telemetria\_bateria} no se guarda \at{id\_bateria}: dependería de \at{id\_vuelo} (dependencia transitiva), así que la batería se obtiene del vuelo.
 \end{itemize}
 
-\paragraph{Restricciones de integridad adicionales.} Varias reglas semánticas no se pueden expresar con claves ni con claves externas; el libro indica que requieren restricciones de tabla o asertos (ap.~3.5.4 y 3.5.6). Como PostgreSQL no implementa \texttt{CREATE ASSERTION}, se implementarán en el Hito 2 con triggers y restricciones \texttt{CHECK}:
+\paragraph{Restricciones de integridad adicionales.} Varias reglas semánticas no se pueden expresar con claves ni con claves externas; el libro indica que requieren restricciones de tabla o asertos (ap.~3.5.4 y 3.5.6). Como PostgreSQL no implementa \texttt{CREATE ASSERTION}, se implementaron con triggers y restricciones \texttt{CHECK} y \texttt{EXCLUDE} (sección~\ref{sec:tablas} y sección 4.6):
 \begin{enumerate}[label=(\roman*)]
 \item cobertura y no solapamiento de la jerarquía de clientes;
 \item peso total por vuelo $\leq$ carga útil del modelo;
@@ -612,6 +612,13 @@ id\_vuelo $\rightarrow$ vuelo (ON DELETE CASCADE)
 \item capacidad del nest no excedida;
 \item al menos dos puntos por ruta.
 \end{enumerate}
+
+Además, al implementar el modelo (Hito 2) se agregaron tres restricciones \texttt{CHECK} de fila que hacen explícitas reglas ya existentes:
+\begin{itemize}
+\item \texttt{ck\_bateria\_salud\_estado} en \tb{bateria}: si \at{salud\_pct} $< 70$, el estado no puede ser \at{operativa} (R12);
+\item \texttt{ck\_vuelo\_estado\_tiempos} en \tb{vuelo}: un vuelo \at{programado} o \at{cancelado} no tiene \at{despegue}, y uno \at{completado} tiene \at{despegue} y \at{aterrizaje};
+\item \texttt{ck\_paquete\_coordenadas} en \tb{paquete}: \at{lat\_destino} y \at{lon\_destino} se registran juntas o faltan juntas.
+\end{itemize}
 
 \subsection{Especificaciones de transformación}
 La traducción sigue el procedimiento del apartado 3.5 de Ramakrishnan y Gehrke.

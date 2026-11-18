@@ -1,0 +1,10 @@
+Sort   [70 filas]
+ -> GroupAggregate   [70 filas]
+    -> Sort   [89 filas]
+       -> Nested Loop   [89 filas]
+          -> Nested Loop   [89 filas]
+             -> Bitmap Heap Scan on telemetria_bateria t   [89 filas]
+                -> Bitmap Index Scan on ix_c3b_telemetria_alertas   [89 filas]
+             -> Index Scan using pk_vuelo on vuelo v   [1 fila ×89]
+          -> Index Scan using pk_bateria on bateria b   [1 fila ×89]
+Tiempo de ejecución: 0,2 ms

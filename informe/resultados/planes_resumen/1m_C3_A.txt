@@ -1,0 +1,12 @@
+Sort   [466 filas]
+ -> GroupAggregate   [466 filas]
+    -> Merge Join   [787 filas]
+       -> Gather Merge   [787 filas]
+          -> Sort   [262 filas ×3]
+             -> Nested Loop   [262 filas ×3]
+                -> Parallel Bitmap Heap Scan on telemetria_bateria t   [262 filas ×3]
+                   (descarta 5 895 filas)
+                   -> Bitmap Index Scan on ix_c3a_telemetria_temp   [18 472 filas]
+                -> Index Scan using pk_vuelo on vuelo v   [1 fila ×787]
+       -> Index Scan using pk_bateria on bateria b   [899 filas]
+Tiempo de ejecución: 8,6 ms

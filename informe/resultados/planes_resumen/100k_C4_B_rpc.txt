@@ -1,0 +1,16 @@
+Sort   [300 filas]
+ -> WindowAgg   [300 filas]
+    -> Merge Join   [300 filas]
+       -> Sort   [300 filas]
+          -> Hash Join   [300 filas]
+             -> Hash Join   [300 filas]
+                -> Seq Scan on drone d   [300 filas]
+                -> Hash   [300 filas]
+                   -> HashAggregate   [300 filas]
+                      -> Seq Scan on vuelo v   [4 436 filas]
+                         (descarta 95 564 filas)
+             -> Hash   [30 filas]
+                -> Seq Scan on estacion_nest n   [30 filas]
+       -> Sort   [8 filas]
+          -> Seq Scan on modelo_drone m   [8 filas]
+Tiempo de ejecución: 10,0 ms

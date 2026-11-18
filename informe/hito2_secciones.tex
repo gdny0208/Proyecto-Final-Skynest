@@ -460,7 +460,9 @@ El experimento está automatizado en \archivo{bench/experimento.py}, de modo que
 \subsection{Optimización de consultas}
 \label{sec:planes}
 
-Los planes se eligieron mirando el plan de ejecución de cada consulta sin índices: qué tabla se lee completa (\emph{Seq Scan}) y qué filtro podría evitarlo. Se muestran los índices de cada plan y el plan de ejecución en la escala de un millón: sin índices y con el plan que más mejoró.
+Los planes se eligieron mirando el plan de ejecución de cada consulta sin índices: qué tabla se lee completa (\emph{Seq Scan}) y qué filtro podría evitarlo. Para cada consulta se muestran los índices de los dos planes y el plan de ejecución en la escala de un millón, sin índices y con el plan que más mejoró.
+
+Los planes de ejecución se presentan resumidos: cada línea es un paso (nodo) del árbol que arma PostgreSQL, con las filas que realmente produjo. Se leen de abajo hacia arriba, y lo importante es cómo se lee cada tabla: \emph{Seq Scan} recorre la tabla completa; \emph{Index Scan}, \emph{Index Only Scan} y \emph{Bitmap Index Scan} entran por un índice. ``$\times n$'' indica que el paso se repitió $n$ veces (por ejemplo, una vez por cada trabajador en paralelo) y ``descarta'', las filas leídas que no cumplieron el filtro. Los planes completos, tal como los entrega \texttt{EXPLAIN (ANALYZE, BUFFERS)}, están en el anexo~\ref{sec:planes_completos}.
 
 \subsubsection{Planes de índices para Consulta 1}
 \begin{lstlisting}[style=sql]
@@ -473,8 +475,8 @@ CREATE INDEX ix_c1b_paquete_vuelo_cov  ON paquete (id_vuelo) INCLUDE (estado, fe
 \end{lstlisting}
 El filtro de un mes selecciona alrededor del 4,5\,\% de los vuelos. Con el plan A, el planificador usa el índice de la fecha, pero sigue resolviendo el join con \tb{paquete} leyendo la tabla completa (\emph{hash join}). El plan B agrega a los índices las columnas que la consulta necesita, y el join se resuelve con un \emph{Index Only Scan}, sin leer la tabla de paquetes.
 
-\textbf{Escala 1M, sin índices:}\plan{1m_C1_sin.txt}
-\textbf{Escala 1M, plan B:}\plan{1m_C1_B.txt}
+\noindent\textbf{Escala 1M, sin índices:}\planresumen{1m_C1_sin.txt}
+\noindent\textbf{Escala 1M, plan B:}\planresumen{1m_C1_B.txt}
 
 \subsubsection{Planes de índices para Consulta 2}
 \begin{lstlisting}[style=sql]
@@ -486,8 +488,8 @@ CREATE INDEX ix_c2b_telemetria_cov ON telemetria_bateria (id_vuelo, marca_tiempo
 \end{lstlisting}
 C2 filtra por las 20 rutas de un nest \emph{y} por un trimestre. El índice compuesto resuelve los dos filtros juntos. El plan B solo filtra por fecha, así que trae vuelos de todos los nests que luego se descartan; su índice de telemetría es el más grande del experimento.
 
-\textbf{Escala 1M, sin índices:}\plan{1m_C2_sin.txt}
-\textbf{Escala 1M, plan A:}\plan{1m_C2_A.txt}
+\noindent\textbf{Escala 1M, sin índices:}\planresumen{1m_C2_sin.txt}
+\noindent\textbf{Escala 1M, plan A:}\planresumen{1m_C2_A.txt}
 
 \subsubsection{Planes de índices para Consulta 3}
 \begin{lstlisting}[style=sql]
@@ -499,8 +501,8 @@ CREATE INDEX ix_c3b_telemetria_alertas ON telemetria_bateria (marca_tiempo)
 \end{lstlisting}
 Sin índices, C3 lee las casi 5 millones de lecturas para quedarse con unas pocas decenas. El índice parcial solo contiene las lecturas que cumplen la condición (alrededor del 0,4\,\%) y además está ordenado por fecha, así que resuelve a la vez el umbral y el mes.
 
-\textbf{Escala 1M, sin índices:}\plan{1m_C3_sin.txt}
-\textbf{Escala 1M, plan B:}\plan{1m_C3_B.txt}
+\noindent\textbf{Escala 1M, sin índices:}\planresumen{1m_C3_sin.txt}
+\noindent\textbf{Escala 1M, plan B:}\planresumen{1m_C3_B.txt}
 
 \subsubsection{Planes de índices para Consulta 4}
 \begin{lstlisting}[style=sql]
@@ -511,8 +513,8 @@ CREATE INDEX ix_c4b_vuelo_despegue_brin ON vuelo USING brin (despegue);
 \end{lstlisting}
 El BRIN guarda solo el mínimo y el máximo de cada bloque de páginas. Por eso es diminuto, pero solo sirve si las filas están guardadas en el orden de la columna. Aquí los vuelos se insertaron agrupados por drone y no por fecha: cada bloque contiene fechas de todo el periodo y el BRIN no puede descartar ninguno. Se incluyó para mostrar cuándo \emph{no} conviene un BRIN.
 
-\textbf{Escala 1M, sin índices:}\plan{1m_C4_sin.txt}
-\textbf{Escala 1M, plan A:}\plan{1m_C4_A.txt}
+\noindent\textbf{Escala 1M, sin índices:}\planresumen{1m_C4_sin.txt}
+\noindent\textbf{Escala 1M, plan A:}\planresumen{1m_C4_A.txt}
 
 \subsubsection{Planes de índices para Consulta 5}
 \begin{lstlisting}[style=sql]
@@ -524,8 +526,8 @@ CREATE INDEX ix_c5b_paquete_express_cov ON paquete (prioridad, estado, fecha_ent
 \end{lstlisting}
 El compuesto resuelve los tres filtros (prioridad, estado y mes) y trae las columnas del join. Aun así, con la configuración por defecto el planificador sigue leyendo \tb{vuelo} completo para el join. Con \texttt{random\_page\_cost = 1.1} cambia a un \emph{nested loop} que busca cada vuelo por su llave primaria.
 
-\textbf{Escala 1M, plan B:}\plan{1m_C5_B.txt}
-\textbf{Escala 1M, plan B con \texttt{random\_page\_cost = 1.1}:}\plan{1m_C5_B_rpc.txt}
+\noindent\textbf{Escala 1M, plan B:}\planresumen{1m_C5_B.txt}
+\noindent\textbf{Escala 1M, plan B con \texttt{random\_page\_cost = 1.1}:}\planresumen{1m_C5_B_rpc.txt}
 
 % ---------------------------------------------------------------------
 \subsection{Plataforma de Pruebas}
@@ -666,6 +668,27 @@ Laboratorio & Las cinco consultas sin índices o con los planes A y B: resultado
 
 \subsection{Video de la experimentación}
 Video de la ejecución de las cinco consultas en la base de 1\,000\,000 de vuelos, sin índices y con índices: \url{PEGAR-ENLACE-DEL-VIDEO}.
+
+% ---------------------------------------------------------------------
+\subsection{Planes de ejecución completos (escala 1M)}
+\label{sec:planes_completos}
+Salida completa de \texttt{EXPLAIN (ANALYZE, BUFFERS)} de los planes resumidos en la sección~\ref{sec:planes}. Los 80 planes (4 escalas, 5 consultas y 4 condiciones) están en \archivo{informe/resultados/planes/}.
+
+\subsubsection*{Consulta 1}
+\textbf{Sin índices:}\plan{1m_C1_sin.txt}
+\textbf{Plan B:}\plan{1m_C1_B.txt}
+\subsubsection*{Consulta 2}
+\textbf{Sin índices:}\plan{1m_C2_sin.txt}
+\textbf{Plan A:}\plan{1m_C2_A.txt}
+\subsubsection*{Consulta 3}
+\textbf{Sin índices:}\plan{1m_C3_sin.txt}
+\textbf{Plan B:}\plan{1m_C3_B.txt}
+\subsubsection*{Consulta 4}
+\textbf{Sin índices:}\plan{1m_C4_sin.txt}
+\textbf{Plan A:}\plan{1m_C4_A.txt}
+\subsubsection*{Consulta 5}
+\textbf{Plan B:}\plan{1m_C5_B.txt}
+\textbf{Plan B con \texttt{random\_page\_cost = 1.1}:}\plan{1m_C5_B_rpc.txt}
 
 \subsection{Dumps y scripts}
 Los cuatro dumps (\archivo{dumps/skynest_1k.dump} a \archivo{dumps/skynest_1m.dump}) se restauran con:

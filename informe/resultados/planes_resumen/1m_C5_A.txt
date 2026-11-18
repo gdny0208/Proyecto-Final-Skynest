@@ -1,0 +1,18 @@
+Sort   [34 filas]
+ -> Finalize GroupAggregate   [34 filas]
+    -> Gather Merge   [101 filas]
+       -> Partial GroupAggregate   [34 filas ×3]
+          -> Sort   [6 418 filas ×3]
+             -> Hash Join   [6 418 filas ×3]
+                -> Hash Join   [6 418 filas ×3]
+                   -> Parallel Hash Join   [6 418 filas ×3]
+                      -> Parallel Seq Scan on vuelo v   [333 333 filas ×3]
+                      -> Parallel Hash   [6 418 filas ×3]
+                         -> Parallel Bitmap Heap Scan on paquete p   [6 418 filas ×3]
+                            (descarta 15 102 filas)
+                            -> Bitmap Index Scan on ix_c5a_paquete_entrega   [64 562 filas]
+                   -> Hash   [600 filas ×3]
+                      -> Seq Scan on ruta_vuelo r   [600 filas ×3]
+                -> Hash   [50 filas ×3]
+                   -> Seq Scan on distrito d   [50 filas ×3]
+Tiempo de ejecución: 57,1 ms

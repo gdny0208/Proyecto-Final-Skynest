@@ -1,0 +1,15 @@
+Sort   [34 filas]
+ -> HashAggregate   [34 filas]
+    -> Hash Join   [2 033 filas]
+       -> Hash Join   [2 033 filas]
+          -> Hash Join   [2 033 filas]
+             -> Seq Scan on vuelo v   [100 000 filas]
+             -> Hash   [2 033 filas]
+                -> Bitmap Heap Scan on paquete p   [2 033 filas]
+                   (descarta 4 593 filas)
+                   -> Bitmap Index Scan on ix_c5a_paquete_entrega   [6 626 filas]
+          -> Hash   [600 filas]
+             -> Seq Scan on ruta_vuelo r   [600 filas]
+       -> Hash   [50 filas]
+          -> Seq Scan on distrito d   [50 filas]
+Tiempo de ejecución: 12,1 ms

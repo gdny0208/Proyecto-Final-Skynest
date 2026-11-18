@@ -23,7 +23,7 @@
   basicstyle=\ttfamily\scriptsize, backgroundcolor=\color{codigofondo}, frame=single,
   rulecolor=\color{codigofondo}, breaklines=true, columns=fullflexible, showstringspaces=false,
   literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1
-           {Ú}{{\'U}}1 {°}{{\textdegree}}1 {→}{{$\rightarrow$}}1
+           {Ú}{{\'U}}1 {°}{{\textdegree}}1 {→}{{$\rightarrow$}}1 {×}{{$\times$}}1
 }
 
 % Resultados del experimento (los genera bench/experimento.py en informe/resultados/)
@@ -35,4 +35,7 @@
   {\includegraphics[width=#2\linewidth]{\resdir/graficos/#1}}{\pendiente{graficos/#1}}}
 \newcommand{\plan}[1]{\IfFileExists{\resdir/planes/#1}%
   {\lstinputlisting[style=salida]{\resdir/planes/#1}}{\pendiente{planes/#1}}}
+% Versión corta del plan (bench/resumir_planes.py): solo nodos, filas y tiempo
+\newcommand{\planresumen}[1]{\IfFileExists{\resdir/planes_resumen/#1}%
+  {\lstinputlisting[style=salida]{\resdir/planes_resumen/#1}}{\pendiente{planes_resumen/#1}}}
 \newcommand{\archivo}[1]{\texttt{\detokenize{#1}}}

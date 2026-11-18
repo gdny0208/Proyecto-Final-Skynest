@@ -1,0 +1,13 @@
+Sort   [33 filas]
+ -> HashAggregate   [33 filas]
+    -> Hash Join   [211 filas]
+       -> Hash Join   [211 filas]
+          -> Hash Join   [211 filas]
+             -> Seq Scan on vuelo v   [10 000 filas]
+             -> Hash   [211 filas]
+                -> Index Only Scan using ix_c5b_paquete_express_cov on paquete p   [211 filas]
+          -> Hash   [600 filas]
+             -> Seq Scan on ruta_vuelo r   [600 filas]
+       -> Hash   [50 filas]
+          -> Seq Scan on distrito d   [50 filas]
+Tiempo de ejecución: 1,1 ms

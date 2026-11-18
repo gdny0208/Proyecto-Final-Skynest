@@ -42,9 +42,13 @@ import platform
 import re
 import statistics
 import subprocess
+import sys
 import time
 
 import psycopg2
+
+sys.path.insert(0, os.path.dirname(__file__))
+import resumir_planes  # noqa: E402
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ESCALAS = {'1k': 1_000, '10k': 10_000, '100k': 100_000, '1m': 1_000_000}
@@ -454,6 +458,7 @@ def postproceso(salida):
                  ('escala', 'operacion', 'condicion')) if os.path.exists(ru) else []
     tablas_latex(fq, fu, os.path.join(salida, 'tablas_latex'))
     graficos(fq, fu, os.path.join(salida, 'graficos'))
+    resumir_planes.main(salida)          # versión corta de los planes para el cuerpo del informe
     print(f'Resúmenes, tablas LaTeX y gráficos en {salida}')
 
 

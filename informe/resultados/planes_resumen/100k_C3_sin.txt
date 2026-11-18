@@ -1,0 +1,11 @@
+Sort   [70 filas]
+ -> GroupAggregate   [70 filas]
+    -> Nested Loop   [89 filas]
+       -> Gather Merge   [89 filas]
+          -> Sort   [30 filas ×3]
+             -> Nested Loop   [30 filas ×3]
+                -> Parallel Seq Scan on telemetria_bateria t   [30 filas ×3]
+                   (descarta 161 615 filas)
+                -> Index Scan using pk_vuelo on vuelo v   [1 fila ×89]
+       -> Index Scan using pk_bateria on bateria b   [1 fila ×89]
+Tiempo de ejecución: 13,3 ms

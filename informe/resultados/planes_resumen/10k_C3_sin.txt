@@ -1,0 +1,10 @@
+Sort   [4 filas]
+ -> GroupAggregate   [4 filas]
+    -> Sort   [5 filas]
+       -> Nested Loop   [5 filas]
+          -> Nested Loop   [5 filas]
+             -> Seq Scan on telemetria_bateria t   [5 filas]
+                (descarta 48 491 filas)
+             -> Index Scan using pk_vuelo on vuelo v   [1 fila ×5]
+          -> Index Scan using pk_bateria on bateria b   [1 fila ×5]
+Tiempo de ejecución: 2,6 ms
