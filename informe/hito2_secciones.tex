@@ -14,7 +14,7 @@ La base se implementó en PostgreSQL 14 con scripts SQL numerados que se ejecuta
 \centering\small
 \caption{Scripts de la implementación}
 \label{tab:scripts}
-\begin{tabular}{lp{10.2cm}}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5cm}>{\raggedright\arraybackslash}X@{}}
 \toprule
 Script & Contenido \\
 \midrule
@@ -25,11 +25,11 @@ Script & Contenido \\
 \archivo{sql/04_procedimientos.sql} & 9 procedimientos del flujo de un envío \\
 \archivo{sql/05_vistas.sql} & 9 vistas de usuario y la función de rastreo \\
 \archivo{sql/06_roles.sql} & 7 roles con privilegios mínimos \\
-\archivo{sql/07_consultas.sql}, \archivo{sql/08_indices.sql} & consultas y planes de índices del experimento \\
+\archivo{sql/07_consultas.sql}\newline\archivo{sql/08_indices.sql} & consultas y planes de índices del experimento \\
 \archivo{gen/construir_bases.sh} & construye las 4 bases, las verifica y genera los 4 dumps \\
 \archivo{bench/experimento.py} & ejecuta el experimento y genera tablas y gráficos \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 % ---------------------------------------------------------------------
@@ -206,18 +206,18 @@ Los procedimientos implementan el flujo de un envío de la sección 1.4.2. Repar
 \begin{table}[H]
 \centering\small
 \caption{Procedimientos almacenados (\archivo{sql/04_procedimientos.sql})}
-\begin{tabular}{lp{9.3cm}}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.6cm}>{\raggedright\arraybackslash}X@{}}
 \toprule
 Procedimiento & Qué hace \\
 \midrule
-\texttt{sp\_registrar\_cliente\_persona/empresa} & inserta la superclase y la subclase en una sola transacción (cobertura de R16) \\
+\texttt{sp\_registrar\_cliente\_persona}\newline\texttt{sp\_registrar\_cliente\_empresa} & inserta la superclase y la subclase en una sola transacción (cobertura de R16) \\
 \texttt{sp\_registrar\_paquete} & registra el paquete, genera el código \texttt{SKY} + 9 dígitos y calcula el costo base \\
 \texttt{sp\_programar\_vuelo} & despacho automático: elige un drone \emph{disponible} del nest con alcance suficiente, una batería \emph{operativa} compatible, un operador autorizado y, si corresponde, el permiso vigente \\
 \texttt{sp\_asignar\_paquete} & sube un paquete \at{registrado} a un vuelo \at{programado} \\
-\texttt{sp\_despegar\_vuelo}, \texttt{sp\_cerrar\_vuelo}, \texttt{sp\_cancelar\_vuelo} & ciclo de vida del vuelo; los triggers actualizan paquetes, drone y batería \\
+\texttt{sp\_despegar\_vuelo}\newline\texttt{sp\_cerrar\_vuelo}\newline\texttt{sp\_cancelar\_vuelo} & ciclo de vida del vuelo; los triggers actualizan paquetes, drone y batería \\
 \texttt{sp\_registrar\_lectura} & inserta una lectura de telemetría en vivo \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 Ejemplo del flujo completo (\archivo{sql/04_flujo_prueba.sql}):
