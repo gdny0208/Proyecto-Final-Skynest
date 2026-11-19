@@ -443,6 +443,7 @@ ORDER BY pct_retraso DESC, express_entregados DESC;
 
 % ---------------------------------------------------------------------
 \subsection{Metodología del experimento}
+\label{sec:metodologia}
 
 El experimento está automatizado en \archivo{bench/experimento.py}, de modo que todas las mediciones siguen el mismo procedimiento:
 
@@ -677,6 +678,32 @@ Cinco videos, uno por consulta, ejecutados en pgAdmin sobre la base de 1\,000\,0
 \end{itemize}
 
 % ---------------------------------------------------------------------
+\subsection{Repositorio del proyecto}
+\label{sec:repositorio}
+Todos los archivos del proyecto están en el repositorio público \url{https://github.com/gdny0208/Proyecto-Final-Skynest}, incluidos los cuatro dumps del experimento (con Git LFS, porque el de 1M supera el límite de 100\,MB por archivo de GitHub). El archivo \archivo{README.md} explica cómo instalarlo, restaurar las bases y repetir el experimento.
+
+\begin{table}[H]
+\centering\small
+\caption{Contenido del repositorio}
+\label{tab:repo}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.4cm}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Carpeta & Contenido \\
+\midrule
+\archivo{sql/} & scripts 01 a 08 (esquemas y tablas, datos reales, triggers, procedimientos, vistas, roles, consultas e índices) y sus pruebas \\
+\archivo{gen/} & generador de datos sintéticos, verificación de las 18 reglas y construcción de las 4 bases \\
+\archivo{bench/} & programa del experimento (sección~\ref{sec:metodologia}) \\
+\archivo{dumps/} & los 4 dumps: \archivo{skynest_1k.dump} a \archivo{skynest_1m.dump} (Git LFS) \\
+\archivo{informe/resultados/} & tiempos de todas las corridas (CSV), los 80 planes de ejecución, gráficos y tablas \\
+\archivo{informe/evidencias/} & salidas de la construcción de las bases, las pruebas y el experimento \\
+\archivo{video_ejemplo/} & scripts que se ejecutan en los 5 videos (\archivo{demo_c1.sql} a \archivo{demo_c5.sql}) \\
+\archivo{web/} & MVP web (FastAPI y PostgreSQL), sección~\ref{sec:mvp} \\
+\archivo{docs/} & informe y modelo E/R del Hito 1 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ---------------------------------------------------------------------
 \subsection{Planes de ejecución completos (escala 1M)}
 \label{sec:planes_completos}
 Salida completa de \texttt{EXPLAIN (ANALYZE, BUFFERS)} de los planes resumidos en la sección~\ref{sec:planes}. Los 80 planes (4 escalas, 5 consultas y 4 condiciones) están en \archivo{informe/resultados/planes/}.
@@ -698,11 +725,9 @@ Salida completa de \texttt{EXPLAIN (ANALYZE, BUFFERS)} de los planes resumidos e
 \textbf{Plan B con \texttt{random\_page\_cost = 1.1}:}\plan{1m_C5_B_rpc.txt}
 
 \subsection{Dumps y scripts}
-El código completo (scripts SQL, generador de datos, experimento y MVP web) está en el repositorio \url{https://github.com/gdny0208/Proyecto-Final-Skynest}.
-
-Los cuatro dumps (\archivo{skynest_1k.dump}, \archivo{skynest_10k.dump}, \archivo{skynest_100k.dump} y \archivo{skynest_1m.dump}) se entregan junto con este informe. Se restauran con:
+Los cuatro dumps (\archivo{skynest_1k.dump}, \archivo{skynest_10k.dump}, \archivo{skynest_100k.dump} y \archivo{skynest_1m.dump}) están en la carpeta \archivo{dumps/} del repositorio (sección~\ref{sec:repositorio}). Se descargan desde la web de GitHub (botón \emph{Download} de cada archivo, \url{https://github.com/gdny0208/Proyecto-Final-Skynest/tree/main/dumps}) o, después de clonar el repositorio, con \texttt{git lfs pull}. Se restauran con:
 \begin{lstlisting}[style=salida]
-createdb skynest_1m && pg_restore -d skynest_1m skynest_1m.dump
+createdb skynest_1m && pg_restore -d skynest_1m dumps/skynest_1m.dump
 psql -d skynest_1m -c "ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public"
 \end{lstlisting}
 La segunda línea se necesita porque \texttt{pg\_dump} guarda los esquemas y su contenido, pero no la ruta de búsqueda por defecto de la base.
@@ -711,4 +736,3 @@ Para reconstruir todo desde cero (bases, verificación, dumps) y repetir el expe
 bash gen/construir_bases.sh                  # 4 bases + 4 dumps
 .venv/bin/python bench/experimento.py        # tablas, gráficos y planes en informe/resultados/
 \end{lstlisting}
-Los resultados completos (todas las corridas) están en \archivo{resultados/tiempos_consultas.csv} y \archivo{resultados/tiempos_actualizacion.csv}, y los planes de ejecución de todas las escalas y condiciones en \archivo{resultados/planes/}.
