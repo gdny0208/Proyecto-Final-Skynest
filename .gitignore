@@ -16,3 +16,6 @@ informe/*.synctex.gz
 *.mov
 *.mp4
 videos_anexo/
+
+# carpeta de entrega de Gradescope (se arma localmente, no va a GitHub)
+Entrega_Hito2_Grupo3/
