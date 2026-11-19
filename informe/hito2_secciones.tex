@@ -698,9 +698,11 @@ Salida completa de \texttt{EXPLAIN (ANALYZE, BUFFERS)} de los planes resumidos e
 \textbf{Plan B con \texttt{random\_page\_cost = 1.1}:}\plan{1m_C5_B_rpc.txt}
 
 \subsection{Dumps y scripts}
-Los cuatro dumps (\archivo{dumps/skynest_1k.dump} a \archivo{dumps/skynest_1m.dump}) se restauran con:
+El código completo (scripts SQL, generador de datos, experimento y MVP web) está en el repositorio \url{https://github.com/gdny0208/Proyecto-Final-Skynest}.
+
+Los cuatro dumps (\archivo{skynest_1k.dump}, \archivo{skynest_10k.dump}, \archivo{skynest_100k.dump} y \archivo{skynest_1m.dump}) se entregan junto con este informe. Se restauran con:
 \begin{lstlisting}[style=salida]
-createdb skynest_1m && pg_restore -d skynest_1m dumps/skynest_1m.dump
+createdb skynest_1m && pg_restore -d skynest_1m skynest_1m.dump
 psql -d skynest_1m -c "ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public"
 \end{lstlisting}
 La segunda línea se necesita porque \texttt{pg\_dump} guarda los esquemas y su contenido, pero no la ruta de búsqueda por defecto de la base.
