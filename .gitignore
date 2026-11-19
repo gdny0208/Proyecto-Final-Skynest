@@ -1,7 +1,7 @@
-# entorno y datos locales (los datos se regeneran con gen/construir_bases.sh)
+# entorno local
 .venv/
 .env
-dumps/
+# dumps/: los 4 .dump se versionan con Git LFS (ver .gitattributes)
 *.csv
 __pycache__/
 .DS_Store
