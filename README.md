@@ -128,7 +128,7 @@ docs/                      informe del Hito 1 y diagrama ER
 | Web | FastAPI + Uvicorn (backend) · HTML, CSS y JavaScript sin frameworks (frontend) |
 | Informe | LaTeX (Overleaf) |
 
-**Dónde están los datos:** en el PostgreSQL de cada computadora, no en GitHub. El repositorio guarda el código y la receta para reconstruirlos: la base de 1M pesa ~1,1 GB y su dump ~200 MB, más que el límite de GitHub. Como el generador usa una semilla fija, cada integrante obtiene la misma base con un solo comando. Para pasarse los datos sin regenerarlos, los dumps de `dumps/` se comparten por Drive.
+**Dónde están los datos:** los 4 dumps (`dumps/skynest_1k.dump` … `skynest_1m.dump`, ~220 MB en total) están en el repositorio con **Git LFS**, porque el de 1M (~200 MB) supera el límite de 100 MB por archivo de GitHub. Las bases restauradas viven en el PostgreSQL de cada computadora. Como el generador usa una semilla fija, también se pueden reconstruir con un solo comando.
 
 ## 6. Cómo ejecutarlo
 
@@ -152,8 +152,9 @@ bash gen/construir_bases.sh 1k     # o solo una escala
 ```
 Por cada escala crea la base, ejecuta `sql/01` y `02`, genera y carga los datos, instala `sql/03` a `06`, corre las 18 verificaciones (todas deben dar 0 violaciones) y guarda el dump.
 
-Para restaurar un dump (por ejemplo, el que te pasó un compañero) en lugar de generar la base:
+Para restaurar un dump en lugar de generar la base, primero descarga los dumps (están en Git LFS; requiere `brew install git-lfs` una vez):
 ```bash
+git lfs install && git lfs pull     # baja dumps/*.dump (~220 MB)
 createdb skynest_1m && pg_restore -d skynest_1m dumps/skynest_1m.dump
 psql -d skynest_1m -c "ALTER DATABASE skynest_1m SET search_path = skynest, reportes, public"
 ```
