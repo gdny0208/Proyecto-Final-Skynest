@@ -1,9 +1,14 @@
 \documentclass[11pt,a4paper]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+\else
+  \usepackage{fontspec}  % XeLaTeX/LuaLaTeX (p. ej. Tectonic): Latin Modern con todos los caracteres UTF-8
+\fi
 \usepackage[spanish,es-noshorthands,es-tabla]{babel}
 \spanishplainpercent  % evita el espacio automático antes de \% (rompe en modo matemático)
-\usepackage{lmodern}
+\ifPDFTeX\usepackage{lmodern}\fi
 \usepackage[margin=2.3cm]{geometry}
 \usepackage{graphicx}
 \usepackage{booktabs,longtable,tabularx,array,multirow}
@@ -228,7 +233,7 @@ Para estimar el espacio se sumó la longitud de los atributos de cada tabla, usa
 \centering\small
 \caption{Longitud estimada de un registro por tabla.}
 \label{tab:bytes1}
-\begin{tabular}{l l r}
+\begin{tabularx}{\textwidth}{@{}l >{\raggedright\arraybackslash}X r@{}}
 \toprule
 Tabla & Longitud de los atributos (bytes) & Registro (bytes) \\
 \midrule
@@ -246,10 +251,10 @@ Tabla & Longitud de los atributos (bytes) & Registro (bytes) \\
 \tb{punto\_ruta} & 4+2+8+8+8+13 & 43 \\
 \tb{permiso\_vuelo} & 4+21+6+4+4+13 & 52 \\
 \tb{vuelo} & 4+4+4+4+4+4+8+8+8+13+11+8 & 80 \\
-\tb{paquete} & 4+12+4+4+6+8+8+8+8+11+1+101+16+151+8+8+13+8+8+8 & 395 \\
+\tb{paquete} & 4+12+4+4+6+8+8+8+8+11+1+\allowbreak 101+16+151+8+8+13+8+8+8 & 395 \\
 \tb{telemetria\_bateria} & 4+8+8+8+8+8 & 44 \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \begin{table}[H]
@@ -499,7 +504,8 @@ La Tabla~\ref{tab:rel} resume los 18 conjuntos de relaciones y la jerarquía de 
 \centering\small
 \caption{Conjuntos de relaciones del modelo E/R y sus restricciones.}
 \label{tab:rel}
-\begin{tabularx}{\textwidth}{l l l X}
+\setlength{\tabcolsep}{5pt}
+\begin{tabularx}{\textwidth}{@{}l l l X@{}}
 \toprule
 Relación & Entidades & Restricción de clave & Participación total \\
 \midrule
@@ -669,7 +675,8 @@ La relación ternaria \textbf{Autorizado} (Operador, ModeloDrone, Distrito) no t
 \newcommand{\dict}[1]{%
 \par\noindent\textbf{Tabla \texttt{#1}}\par\nopagebreak}
 \newenvironment{dtab}{%
-\begin{longtable}{>{\ttfamily\raggedright\arraybackslash}p{3.3cm} >{\raggedright\arraybackslash}p{2.5cm} c >{\raggedright\arraybackslash}p{3.6cm} >{\raggedright\arraybackslash}p{4.3cm}}
+\setlength{\tabcolsep}{4pt}%
+\begin{longtable}{@{}>{\ttfamily\raggedright\arraybackslash}p{3.9cm} >{\raggedright\arraybackslash}p{2.6cm} c >{\raggedright\arraybackslash}p{3.4cm} >{\raggedright\arraybackslash}p{4.0cm}@{}}
 \toprule
 \normalfont\textbf{Atributo} & \textbf{Tipo} & \textbf{Nulo} & \textbf{Restricciones} & \textbf{Descripción}\\
 \midrule\endhead}{\bottomrule\end{longtable}}
