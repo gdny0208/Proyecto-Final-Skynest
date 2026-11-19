@@ -116,6 +116,7 @@ informe/
   hito2_secciones.tex      secciones 4 a 7 del Hito 2
   resultados/              tablas, gráficos y planes que genera el experimento
 docs/                      informe del Hito 1 y diagrama ER
+presentacion/              diapositivas de la presentación del Hito 2 (PDF)
 ```
 
 ## 5. Stack tecnológico
